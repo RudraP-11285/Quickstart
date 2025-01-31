@@ -9,12 +9,14 @@ import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -38,6 +40,7 @@ import pedroPathing.constants.LConstants;
 
 @Autonomous(name = "! 11285 Autonomous", group = "! Autonomous")
 public class forwardOdometry extends OpMode {
+
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -83,6 +86,8 @@ public class forwardOdometry extends OpMode {
     // Sensors
     private DistanceSensor backDistance = null;
     private Limelight3A limelight;
+    private ColorSensor colorSensor = null;
+    private Servo indicatorServo;
 
     boolean magHorOn = true; // Usually, "false" means pressed
     boolean magVertOn = true; // Usually, "false" means pressed
@@ -118,6 +123,9 @@ public class forwardOdometry extends OpMode {
 
     Boolean autoIntakeMode = false;
     Boolean autoIntakeDebounce = false;
+
+    double verticalZeroValue = 0;
+    double verticalLiftValue = 0;
     //endregion
 
     private double timeStamp = 0.0;
@@ -339,7 +347,7 @@ public class forwardOdometry extends OpMode {
                     }
                 }
 
-                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 51.5) < 2) {
+                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 46.8) < 2) {
                     grabbing = true;
                     grabTimer = runtime.seconds();
                     setPathState(6);
@@ -415,15 +423,49 @@ public class forwardOdometry extends OpMode {
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
     @Override
     public void loop() {
-        //region Magnetic Limit Switches
-        magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
-        magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
-        limitSwitchNotTriggered = magLimVertical1.getState();
+
+        //region Color Lights :3
+        float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+        float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+        float greenPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+
+        if (bluePercent > 0.40) {
+            indicatorServo.setPosition(0.611);
+        } else if (redPercent > 0.35 && greenPercent > 0.35) {
+            indicatorServo.setPosition(0.35);
+        } else if (redPercent > 0.40) {
+            indicatorServo.setPosition(0.279);
+        } else {
+            if (autoIntakeMode) {
+                if (intakeClawState) {
+                    indicatorServo.setPosition(0.5);
+                } else {
+                    indicatorServo.setPosition(0.444);
+                }
+            } else {
+                if (intakeClawState) {
+                    indicatorServo.setPosition(0.7);
+                } else {
+                    indicatorServo.setPosition(1);
+                }
+            }
+        }
         //endregion
+
+        //region Magnetic Limit Switches
+        boolean magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
+        boolean magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
+
+        if (magVertOn) {
+            verticalZeroValue = (double) verticalRight.getCurrentPosition();
+        }
+        verticalLiftValue = (double) (verticalRight.getCurrentPosition() - verticalZeroValue);
+        //endregion
+
 
         if (intakeState) {
             moveWristTo("Close", intakeWrist);
-            if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 50) <= 10) {
+            if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 65) <= 30) {
                 if (intakeWaitToReturn) {
                     //intakeClawState = true;
                     moveArmTo("Wait", intakeArm);
@@ -439,7 +481,7 @@ public class forwardOdometry extends OpMode {
                 moveWristTo("Grab", intakeWrist);
             }
 
-            if ((Math.abs(wristServoController.getCurrentPositionInDegrees() - 9.16) <= 9.16) || (Math.abs(wristServoController.getCurrentPositionInDegrees() - 100) <= 10)) {
+            if ((Math.abs(wristServoController.getCurrentPositionInDegrees() - 15) <= 10) || (Math.abs(wristServoController.getCurrentPositionInDegrees() - 100) <= 10)) {
                 if (!grabbing) {
                     //intakeClawState = false;
                     moveArmTo("Open", intakeArm);
@@ -449,15 +491,15 @@ public class forwardOdometry extends OpMode {
             }
         }
         if (autoIntakeMode) {
-            if (runtime.seconds() > grabTimer + 0.5 && grabbing) {
-                grabbing = false;
-            }
-        } else {
             if (runtime.seconds() > grabTimer + 0.45 && grabbing) {
                 grabbing = false;
             }
+        } else {
+            if (runtime.seconds() > grabTimer + 0.3 && grabbing) {
+                grabbing = false;
+            }
         }
-        if (runtime.seconds() > grabTimer + 0.01 && grabbing && runtime.seconds() < grabTimer + 0.6) {
+        if (runtime.seconds() > grabTimer + 0.15 && grabbing && runtime.seconds() < grabTimer + 0.6) {
             intakeClawState = true;
         }
 
@@ -537,8 +579,10 @@ public class forwardOdometry extends OpMode {
         magLimHorizontal2 = hardwareMap.get(DigitalChannel.class, "magLimHorizontal2");
 
         // Get sensors here
-        backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
+        //backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        colorSensor = hardwareMap.get(ColorSensor.class, "colorsensor");
+        indicatorServo = hardwareMap.get(Servo.class, "indicator_servo");
 
         limelight.setPollRateHz(100);
         //telemetry.setMsTransmissionInterval(11);
@@ -553,17 +597,17 @@ public class forwardOdometry extends OpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
-        deposRightController = new ContinuousServoController(dummy, depositEncoder1);
-        wristServoController = new ContinuousServoController(dummy, wristEncoder1);
-        intakeArmServoController = new ContinuousServoController(dummy, armEncoder1);
-
         verticalLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         magLimVertical1.setMode(DigitalChannel.Mode.INPUT);
         magLimHorizontal1.setMode(DigitalChannel.Mode.INPUT);
 
+        CRServo dummy = null;
+        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
+        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
+        //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
         //endregion
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -600,19 +644,19 @@ public class forwardOdometry extends OpMode {
         switch (state) {
             case "Open": // Equal to grab position
                 if (autoIntakeMode) {
-                    arm.setPosition(0.4);
+                    arm.setPosition(0.7);
                 } else {
-                    arm.setPosition(0.55);
+                    arm.setPosition(0.575);
                 }
                 break;
             case "Close": // Equal to transfer position
-                arm.setPosition(0);
+                arm.setPosition(0.9); // 0
                 break;
             case "Grab": // Equal to grab position
-                arm.setPosition(0.675);
+                arm.setPosition(0.475);
                 break;
             case "Wait": // Wait to return position
-                arm.setPosition(0.4);
+                arm.setPosition(0.75);
                 break;
         }
     }
@@ -622,16 +666,16 @@ public class forwardOdometry extends OpMode {
         switch (state) {
             case "Open": // Equal to grab position
                 if (autoIntakeMode) {
-                    wrist.setPosition(0);
+                    wrist.setPosition(1);
                 } else {
-                    wrist.setPosition(0.225);
+                    wrist.setPosition(0.735);
                 }
                 break;
             case "Close": // Equal to transfer position
-                wrist.setPosition(1);
+                wrist.setPosition(0.15);
                 break;
             case "Grab":
-                wrist.setPosition(0.25);
+                wrist.setPosition(0.69);
                 break;
         }
     }
@@ -640,16 +684,16 @@ public class forwardOdometry extends OpMode {
     public void moveDeposTo(String state, Servo left, Servo right) {
         switch (state) {
             case "Transfer": // Equal to grab position
-                left.setPosition(1);
-                right.setPosition(0);
+                left.setPosition(0.75);
+                right.setPosition(0.25);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.51);
-                right.setPosition(0.49);
+                left.setPosition(0.2);
+                right.setPosition(0.8);
                 break;
             case "Specimen":
-                left.setPosition(0.3);
-                right.setPosition(0.7);
+                left.setPosition(0.2);
+                right.setPosition(0.8);
                 break;
         }
     }
@@ -659,26 +703,26 @@ public class forwardOdometry extends OpMode {
     // Check if horizontal slides are all the way in
     public Boolean extendoClosed() { return (horizontalDrive.getCurrentPosition() < 25); }
     // Check if lift is all the way down
-    public Boolean liftDown() { return (verticalRight.getCurrentPosition() < 25); }
+    public Boolean liftDown(DigitalChannel limitSwitch) { return (!limitSwitch.getState()); }
     // Check if wrist and arm are back and claw is rotated in transfer position
-    public Boolean intakeInTransferPosition(ContinuousServoController controllerWrist) { return (Math.abs(controllerWrist.getCurrentPositionInDegrees() - 60.5) < 5); }
+    public Boolean intakeInTransferPosition(ContinuousServoController controllerWrist) { return (Math.abs(controllerWrist.getCurrentPositionInDegrees() - 63.70) < 5); }
     // Check if the depos arm is down
-    public Boolean deposArmDown(ContinuousServoController controllerDepos) { return (Math.abs(controllerDepos.getCurrentPositionInDegrees() - 14) < 3); }
+    public Boolean deposArmDown(ContinuousServoController controllerDepos) { return (Math.abs(controllerDepos.getCurrentPositionInDegrees() - 32) < 3); }
     // Check if the depos claw is closed
     public Boolean deposClawClosed() { return deposClawState; }
 
     // Get the state of the robot based on other values; can be overridden by certain controls
-    public String getRobotState(ContinuousServoController controllerWrist, ContinuousServoController controllerDepos) {
-        if (extendoClosed() && liftDown() && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerWrist) && !deposClawClosed()) {
+    public String getRobotState(ContinuousServoController controllerWrist, ContinuousServoController controllerDepos, DigitalChannel limitSwitch) {
+        if (extendoClosed() && liftDown(limitSwitch) && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerWrist) && !deposClawClosed()) {
             // If everything retracted and depos claw open, basically starting position
             return "Transfer Ready";
-        } else if (extendoClosed() && liftDown() && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerWrist) && deposClawClosed()) {
+        } else if (extendoClosed() && liftDown(limitSwitch) && deposArmDown(controllerDepos) && intakeInTransferPosition(controllerWrist) && deposClawClosed()) {
             // If everything retracted and depos claw closed, basically starting position
             return "Transfer Complete";
         } else if (!extendoClosed() || !intakeInTransferPosition(controllerWrist)) {
             // If extendo not in and arm/wrist not retracted
             return "Grab";
-        } else if (!liftDown() || !deposArmDown(controllerDepos)) {
+        } else if (!liftDown(limitSwitch) || !deposArmDown(controllerDepos)) {
             // If lift not down
             return "Depos";
         }

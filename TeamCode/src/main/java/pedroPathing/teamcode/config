@@ -1,0 +1,36 @@
+Expansion Hub:
+    Motor:
+        0 - verticalRight
+        1 - verticalLeft
+        3 - horizontalDrive
+    Servo:
+        0 - deposClaw
+    Analog Input Devices:
+        0 - depositEncoder1
+        1 - depositEncoder2
+
+Control Hub:
+    Motor:
+        0 - leftFront
+        1 - rightFront
+        2 - rightRear
+        3 - leftRear
+    Servo:
+        0 - deposLeft
+        1 - deposRight
+        2 - intakeArm
+        3 - intakeClaw
+        4 - intakeRotate
+        5 - intakeWrist
+    Digital Devices:
+        0 - magLimVertical1
+        1 - magLimVertical2
+        6 - magLimHorizontal1
+        7 - magLimHorizontal2
+    Analog Input Devices:
+        0 - wristEncoder1
+        1 - wristEncoder2
+        2 - armEncoder1
+        2 - armEncoder2
+    I2C Bus 1:
+        0 - backDistance

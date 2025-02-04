@@ -129,6 +129,7 @@ public class forwardOdometry extends OpMode {
     //endregion
 
     private double timeStamp = 0.0;
+    private double colorvalue = 0.279;
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -271,13 +272,13 @@ public class forwardOdometry extends OpMode {
                 setPathState(1);
                 break;
             case 1: // Bring the lift up as we move
-                if (verticalRight.getCurrentPosition() < 3150) {
+                if (verticalRight.getCurrentPosition() < 3500) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && (!(verticalRight.getCurrentPosition() < 3150))) {
+                if(!follower.isBusy() && (!(verticalRight.getCurrentPosition() < 3500))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -296,14 +297,20 @@ public class forwardOdometry extends OpMode {
                 }
                 break;
             case 3: // Wait for drop, start moving to grab
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.6)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
                     break;
                 }
+                deposArmState = false;
                 numberScored++;
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 setPathState(4);
                 break;
             case 4: // Go to the next grab path
                 //follower.followPath(grabPaths[numberScored - 1], true);
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
+                    break;
+                }
+
                 switch (numberScored) {
                     case 1:
                         follower.followPath(grabPickup1, true);
@@ -327,7 +334,6 @@ public class forwardOdometry extends OpMode {
                 }
                 break;
             case 5: // Bring stuff down, grab when in position
-                deposArmState = false;
                 if (verticalRight.getCurrentPosition() > 5) {
                     verticalLeft.setPower(0.8);
                     verticalRight.setPower(-0.8);
@@ -347,7 +353,7 @@ public class forwardOdometry extends OpMode {
                     }
                 }
 
-                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 46.8) < 2) {
+                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 34) < 4) {
                     grabbing = true;
                     grabTimer = runtime.seconds();
                     setPathState(6);
@@ -425,30 +431,11 @@ public class forwardOdometry extends OpMode {
     public void loop() {
 
         //region Color Lights :3
-        float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-        float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-        float greenPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+        indicatorServo.setPosition(colorvalue);
 
-        if (bluePercent > 0.40) {
-            indicatorServo.setPosition(0.611);
-        } else if (redPercent > 0.35 && greenPercent > 0.35) {
-            indicatorServo.setPosition(0.35);
-        } else if (redPercent > 0.40) {
-            indicatorServo.setPosition(0.279);
-        } else {
-            if (autoIntakeMode) {
-                if (intakeClawState) {
-                    indicatorServo.setPosition(0.5);
-                } else {
-                    indicatorServo.setPosition(0.444);
-                }
-            } else {
-                if (intakeClawState) {
-                    indicatorServo.setPosition(0.7);
-                } else {
-                    indicatorServo.setPosition(1);
-                }
-            }
+        colorvalue += 0.005;
+        if (colorvalue > 0.72) {
+            colorvalue = 0.28;
         }
         //endregion
 
@@ -528,6 +515,7 @@ public class forwardOdometry extends OpMode {
 
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
+        telemetry.addData("FOLLOWER BUSY", follower.isBusy());
         telemetry.addData("claw state", intakeClawState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
@@ -604,10 +592,10 @@ public class forwardOdometry extends OpMode {
         magLimHorizontal1.setMode(DigitalChannel.Mode.INPUT);
 
         CRServo dummy = null;
-        ContinuousServoController deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
-        ContinuousServoController deposRightController = new ContinuousServoController(dummy, depositEncoder1);
-        ContinuousServoController wristServoController = new ContinuousServoController(dummy, wristEncoder1);
-        //ContinuousServoController intakeArmServoController = new ContinuousServoController(intakeArm, armEncoder1);
+        deposLeftController = new ContinuousServoController(dummy, depositEncoder1);
+        deposRightController = new ContinuousServoController(dummy, depositEncoder1);
+        wristServoController = new ContinuousServoController(dummy, wristEncoder1);
+        intakeArmServoController = new ContinuousServoController(dummy, armEncoder1);
         //endregion
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 

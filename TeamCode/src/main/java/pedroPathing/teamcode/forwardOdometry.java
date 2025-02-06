@@ -152,16 +152,16 @@ public class forwardOdometry extends OpMode {
     private final Pose startPose = new Pose(9, 104, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(13.5, 127.5, Math.toRadians(315));
+    private final Pose scorePose = new Pose(15.5, 127.5, Math.toRadians(315)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(33.15, 123.50, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(33.3, 123.50, Math.toRadians(0));
 
     /** Middle (Second) Sample from the Spike Mark */
-    private final Pose pickup2Pose = new Pose(32.15, 133.25, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(29.25, 131.75, Math.toRadians(0)); // y = 132.25
 
     /** Highest (Third) Sample from the Spike Mark */
-    private final Pose pickup3Pose = new Pose(41.55, 130.2, Math.toRadians(90));
+    private final Pose pickup3Pose = new Pose(41.25,  129.55, Math.toRadians(90));
 
     /** Park Pose for our robot, after we do all of the scoring. */
     private final Pose parkPose = new Pose(64.28286852589642, 97.91235059760957, Math.toRadians(90));
@@ -346,7 +346,7 @@ public class forwardOdometry extends OpMode {
                 if (numberScored == 3) {
                     intakeRotateState = true;
 
-                    if (horizontalDrive.getCurrentPosition() < 75) {
+                    if (horizontalDrive.getCurrentPosition() < 175) {
                         horizontalDrive.setPower(0.2);
                     } else {
                         horizontalDrive.setPower(0);
@@ -370,8 +370,8 @@ public class forwardOdometry extends OpMode {
                 }
                 break;
             case 7: // Go to transfer position
-                if (!magHorOn) {
-                    horizontalDrive.setPower(-0.2);
+                if (horizontalDrive.getCurrentPosition() > 10) {
+                    horizontalDrive.setPower(-0.75);
                 } else {
                     horizontalDrive.setPower(0);
                 }
@@ -388,14 +388,15 @@ public class forwardOdometry extends OpMode {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
 
-                    //if (!magHorOn) {
+                    if (!(horizontalDrive.getCurrentPosition() > 10)) {
                         setPathState(8);
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                    //}
+                    }
                 }
                 break;
             case 8:
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 1.00)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                // transfer
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = true;
                     setPathState(9);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -440,8 +441,8 @@ public class forwardOdometry extends OpMode {
         //endregion
 
         //region Magnetic Limit Switches
-        boolean magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
-        boolean magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
+        magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
+        magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
 
         if (magVertOn) {
             verticalZeroValue = (double) verticalRight.getCurrentPosition();
@@ -452,7 +453,7 @@ public class forwardOdometry extends OpMode {
 
         if (intakeState) {
             moveWristTo("Close", intakeWrist);
-            if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 65) <= 30) {
+            if (Math.abs(wristServoController.getCurrentPositionInDegrees() - 65) <= 20) {
                 if (intakeWaitToReturn) {
                     //intakeClawState = true;
                     moveArmTo("Wait", intakeArm);

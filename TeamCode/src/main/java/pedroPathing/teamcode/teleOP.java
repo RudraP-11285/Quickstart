@@ -76,7 +76,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="! Into the Deep - V2 TeleOp", group="TeleOp")
+@TeleOp(name="! Into the Deep - V2 TeleOp", group="! TeleOp")
 public class teleOP extends LinearOpMode {
 
     //region Declare Hardware

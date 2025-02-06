@@ -38,8 +38,8 @@ import pedroPathing.constants.LConstants;
  * @version 2.0, 11/28/2024
  */
 
-@Autonomous(name = "! 11285 Sample Autonomous", group = "! Autonomous")
-public class forwardOdometry extends OpMode {
+@Autonomous(name = "! 11285 Specimen Autonomous", group = "! Autonomous")
+public class specimenAuto extends OpMode {
 
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
@@ -149,13 +149,27 @@ public class forwardOdometry extends OpMode {
      * Lets assume the Robot is facing the human player and we want to score in the bucket */
 
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(9, 104, Math.toRadians(0));
+    private final Pose startPose = new Pose(9.5, 56, Math.toRadians(180));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(15.5, 127.5, Math.toRadians(315)); //13.5, 127.5
+    private final Pose scorePose = new Pose(38.63, 68.84, Math.toRadians(180)); //13.5, 127.5
 
-    /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(33.3, 123.50, Math.toRadians(0));
+    /** Picking up Specimen Pose */
+    private final Pose pickupPose = new Pose(14.151394422310757, 35.569721115537845, Math.toRadians(0));
+
+    /** Push 1 Poses */
+    private final Pose push1FinalPose = new Pose(14.075697211155378, 26.199203187250987, Math.toRadians(180));
+    private final Pose push1ControlPose1 = new Pose(-25.147410358565737, 30.64541832669322, Math.toRadians(180));
+    private final Pose push1ControlPose2 = new Pose(175.7011952191235, 23.71314741035856, Math.toRadians(180));
+
+    /** Push 2 Poses */
+    private final Pose push2FinalPose = new Pose(14.266932270916334, 15.681274900398408, Math.toRadians(180));
+    private final Pose push2ControlPose1 = new Pose(134.82071713147408, 23.904382470119515, Math.toRadians(180));
+
+    /** Push 3 Poses */
+    private final Pose push3FinalPose = new Pose(14.474103585657371, 10.796812749003976, Math.toRadians(180));
+    private final Pose push3ControlPose1 = new Pose(134.82071713147408, 9.37051792828686, Math.toRadians(180));
+
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(29.325, 132.25, Math.toRadians(0));
@@ -171,10 +185,10 @@ public class forwardOdometry extends OpMode {
     private final Pose parkControlPose = new Pose(75.25091633466136, 139.0836653386454, Math.toRadians(90));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    private Path scorePreload, park;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    private Path push1, finishPush1, push2, push3, scorePreload, park;
+    private PathChain  scorePickup1, scorePickup2, scorePickup3;
 
-    private PathChain[] grabPaths = {grabPickup1, grabPickup2, grabPickup3};
+    private Path[] grabPaths = {push1, push2, push3};
     private PathChain[] scorePaths = {scorePickup1, scorePickup2, scorePickup3};
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
@@ -203,41 +217,24 @@ public class forwardOdometry extends OpMode {
         /* Here is an example for Constant Interpolation
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
-        /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(scorePose), new Point(pickup1Pose)))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                .build();
+        /* This is our push1 Path. */
+        push1 = new Path(new BezierCurve(
+                new Point(38.629, 68.845, Point.CARTESIAN),
+                new Point(-10.147, 25.645, Point.CARTESIAN),
+                new Point(75.701, 23.713, Point.CARTESIAN)));
+                //new Path(new BezierCurve(new Point(scorePose), /* Control Point */ Pathnew Point(push1ControlPose1), new Point(push1ControlPose2)), new Point(push1FinalPose)));
+        push1.setLinearHeadingInterpolation(scorePose.getHeading(), push1ControlPose2.getHeading());
 
-        /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup1Pose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scorePose.getHeading())
-                .build();
+        finishPush1 = new Path(new BezierLine(new Point(push1ControlPose2), new Point(push1FinalPose)));
+        finishPush1.setLinearHeadingInterpolation(push1ControlPose2.getHeading(), push1FinalPose.getHeading());
 
-        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(scorePose), new Point(pickup2Pose)))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-                .build();
+        /* This is our push2 Path. */
+        push2 = new Path(new BezierCurve(new Point(push1FinalPose), /* Control Point */ new Point(push2ControlPose1), new Point(push2FinalPose)));
+        push2.setLinearHeadingInterpolation(push1FinalPose.getHeading(), push2FinalPose.getHeading());
 
-        /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup2Pose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
-                .build();
-
-        /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(scorePose), new Point(pickup3Pose)))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .build();
-
-        /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup3Pose), new Point(scorePose)))
-                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
-                .build();
+        /* This is our push3 Path. */
+        push3 = new Path(new BezierCurve(new Point(push2FinalPose), /* Control Point */ new Point(push3ControlPose1), new Point(push3FinalPose)));
+        push3.setLinearHeadingInterpolation(push2FinalPose.getHeading(), push3FinalPose.getHeading());
 
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
         park = new Path(new BezierCurve(new Point(scorePose), /* Control Point */ new Point(parkControlPose), new Point(parkPose)));
@@ -254,31 +251,18 @@ public class forwardOdometry extends OpMode {
                 intakeClawState = false;
                 intakeRotateState = false;
 
-                switch (numberScored) {
-                    case 0:
-                        follower.followPath(scorePreload, true);
-                        break;
-                    case 1:
-                        follower.followPath(scorePickup1, true);
-                        break;
-                    case 2:
-                        follower.followPath(scorePickup2, true);
-                        break;
-                    case 3:
-                        follower.followPath(scorePickup3, true);
-                        break;
-                }
+                follower.followPath(scorePreload, true);
 
                 setPathState(1);
                 break;
             case 1: // Bring the lift up as we move
-                if (verticalRight.getCurrentPosition() < 3500) {
-                    verticalLeft.setPower(-1);
-                    verticalRight.setPower(1);
+                if (verticalLiftValue < 625) {
+                    verticalLeft.setPower(-0.4);
+                    verticalRight.setPower(0.4);
                 }
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && (!(verticalLiftValue < 2900))) {
+                if(!follower.isBusy() && (!(verticalLiftValue < 625))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -289,142 +273,43 @@ public class forwardOdometry extends OpMode {
                 }
                 break;
             case 2: // Bring up the arm, wait, and drop
-                deposArmState = true;
-
-                if (verticalRight.getCurrentPosition() < 3500) {
-                    verticalLeft.setPower(-1);
-                    verticalRight.setPower(1);
-                } else {
-                    verticalLeft.setPower(0);
-                    verticalRight.setPower(0);
-                }
-
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
-                    deposClawState = false;
                     setPathState(3);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 3: // Wait for drop, start moving to grab
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
-                    break;
-                }
-                deposArmState = false;
-                numberScored++;
-                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                follower.followPath(push1, false);
                 setPathState(4);
                 break;
             case 4: // Go to the next grab path
-                //follower.followPath(grabPaths[numberScored - 1], true);
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
-                    break;
-                }
-
-                switch (numberScored) {
-                    case 1:
-                        follower.followPath(grabPickup1, true);
-                        setPathState(5);
-                        break;
-                    case 2:
-                        follower.followPath(grabPickup2, true);
-                        setPathState(5);
-                        break;
-                    case 3:
-                        follower.followPath(grabPickup3, true);
-                        setPathState(5);
-                        break;
-                    case 4:
-                        follower.followPath(park, false);
-                        deposClawState = true;
-                        intakeClawState = false;
-                        intakeRotateState = false;
-                        setPathState(999);
-                        break;
+                if (!follower.isBusy()) {
+                   setPathState(5);
                 }
                 break;
             case 5: // Bring stuff down, grab when in position
-                if (verticalRight.getCurrentPosition() > 5) {
-                    verticalLeft.setPower(0.8);
-                    verticalRight.setPower(-0.8);
-                } else {
-                    verticalRight.setPower(0);
-                    verticalLeft.setPower(0);
-                }
-
-                intakeState = false;
-                if (numberScored == 3) {
-                    intakeRotateState = true;
-
-                    if (horizontalDrive.getCurrentPosition() < 175) {
-                        horizontalDrive.setPower(0.2);
-                    } else {
-                        horizontalDrive.setPower(0);
-                    }
-                }
-
-                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 34) < 4) {
-                    grabbing = true;
-                    grabTimer = runtime.seconds();
-                    setPathState(6);
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
-
-                    verticalLeft.setPower(0);
-                    verticalRight.setPower(0);
-                }
+                follower.followPath(finishPush1, true);
+                setPathState(6);
                 break;
             case 6: // Wait for grab to complete
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (!follower.isBusy()) {
                     setPathState(7);
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 7: // Go to transfer position
-                if (horizontalDrive.getCurrentPosition() > 10) {
-                    horizontalDrive.setPower(-0.75);
-                } else {
-                    horizontalDrive.setPower(0);
-                }
-
-                intakeState = true;
-                intakeRotateState = false;
-                intakeClawState = true;
-                deposArmState = false;
-
-                if (verticalRight.getCurrentPosition() > 5) {
-                    verticalLeft.setPower(1);
-                    verticalRight.setPower(-1);
-                } else {
-                    verticalRight.setPower(0);
-                    verticalLeft.setPower(0);
-
-                    if (!(horizontalDrive.getCurrentPosition() > 10)) {
-                        setPathState(8);
-                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                    }
-                }
+                follower.followPath(push2, true);
+                setPathState(8);
                 break;
             case 8:
-                // transfer
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
-                    deposClawState = true;
+                if (!follower.isBusy()) {
                     setPathState(9);
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 9:
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.30)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
-                    setPathState(0);
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                }
+
                 break;
             case 999:
-                if (verticalRight.getCurrentPosition() > 1250) {
-                    verticalLeft.setPower(1);
-                    verticalRight.setPower(-1);
-                } else {
-                    verticalRight.setPower(0);
-                    verticalLeft.setPower(0);
-                }
+
                 break;
         }
     }

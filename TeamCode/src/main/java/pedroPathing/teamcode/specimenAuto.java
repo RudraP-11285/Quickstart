@@ -385,7 +385,7 @@ public class specimenAuto extends OpMode {
             intakeClawState = true;
         }
 
-        if (intakeRotateState) { intakeRotate.setPosition(0); } else { intakeRotate.setPosition(1); }
+        if (intakeRotateState) { intakeRotate.setPosition(1); } else { intakeRotate.setPosition(0.33); }
 
         if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
 

@@ -426,7 +426,7 @@ public class teleOP extends LinearOpMode {
             //region Intake Rotate Controls
             // NOTE: All code below controls the intake rotate
             // intakeRotateState = true (Not Transfer Position) or false (Transfer Position)
-            if (intakeRotateState) { intakeRotate.setPosition(0); } else { intakeRotate.setPosition(1); }
+            if (intakeRotateState) { intakeRotate.setPosition(1); } else { intakeRotate.setPosition(0.33); }
             // Intake Rotate controls under different circumstances
             switch (robotState) {
                 case "Transfer Ready":

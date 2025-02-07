@@ -67,10 +67,10 @@ public class encoderTest extends LinearOpMode {
                     rotate.setPosition(0);
                     break;
                 case 2:
-                    rotate.setPosition(0.65);
+                    rotate.setPosition(0.72);
                     break;
                 case 3:
-                    rotate.setPosition(0.35);
+                    rotate.setPosition(0.38);
                     break;
                 default:
                     deposLeft.setPosition(0);

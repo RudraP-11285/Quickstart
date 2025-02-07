@@ -306,7 +306,7 @@ public class forwardOdometry extends OpMode {
                 }
                 break;
             case 3: // Wait for drop, start moving to grab
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) { // 0.3 before CHANGED
                     break;
                 }
                 deposArmState = false;
@@ -316,7 +316,7 @@ public class forwardOdometry extends OpMode {
                 break;
             case 4: // Go to the next grab path
                 //follower.followPath(grabPaths[numberScored - 1], true);
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) { // 0.3 before CHANGED
                     break;
                 }
 
@@ -373,7 +373,7 @@ public class forwardOdometry extends OpMode {
                 }
                 break;
             case 6: // Wait for grab to complete
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { // 0.5 before CHANGED //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     setPathState(7);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
@@ -500,7 +500,7 @@ public class forwardOdometry extends OpMode {
             intakeClawState = true;
         }
 
-        if (intakeRotateState) { intakeRotate.setPosition(1); } else { intakeRotate.setPosition(0.33); }
+        if (intakeRotateState) { intakeRotate.setPosition(0.38); } else { intakeRotate.setPosition(0.72); }
 
         if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
 

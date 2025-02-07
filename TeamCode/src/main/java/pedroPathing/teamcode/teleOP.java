@@ -426,7 +426,7 @@ public class teleOP extends LinearOpMode {
             //region Intake Rotate Controls
             // NOTE: All code below controls the intake rotate
             // intakeRotateState = true (Not Transfer Position) or false (Transfer Position)
-            if (intakeRotateState) { intakeRotate.setPosition(1); } else { intakeRotate.setPosition(0.33); }
+            if (intakeRotateState) { intakeRotate.setPosition(0.38); } else { intakeRotate.setPosition(0.72); }
             // Intake Rotate controls under different circumstances
             switch (robotState) {
                 case "Transfer Ready":
@@ -471,30 +471,32 @@ public class teleOP extends LinearOpMode {
                             grabbing = true;
                         }
                         // If "x" pressed while grabbing, jab down and grab. Otherwise allow open and close
-                    } else if (autoIntakeMode && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
-                        grabTimer = runtime.seconds();
-                        //intakeClawState = true;
-                        grabbing = true;
+                    } else if (autoIntakeMode) {
+                        if (autoIntakeMode && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                            grabTimer = runtime.seconds();
+                            //intakeClawState = true;
+                            grabbing = true;
 
 
-                        if (pythonOutputs[4] < 0.5) {
-                            intakeRotateState = true;
-                        } else {
-                            intakeRotateState = false;
+                            if (pythonOutputs[4] < 0.5) {
+                                intakeRotateState = true;
+                            } else {
+                                intakeRotateState = false;
+                            }
                         }
 
-                    } else if (autoIntakeMode && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
-                        grabTimer = runtime.seconds();
-                        //intakeClawState = true;
-                        grabbing = true;
+                        if (autoIntakeMode && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                            grabTimer = runtime.seconds();
+                            //intakeClawState = true;
+                            grabbing = true;
 
 
-                        if (pythonOutputs[9] < 0.5) {
-                            intakeRotateState = true;
-                        } else {
-                            intakeRotateState = false;
+                            if (pythonOutputs[9] < 0.5) {
+                                intakeRotateState = true;
+                            } else {
+                                intakeRotateState = false;
+                            }
                         }
-
                     }
                     break;
                 case "Transfer Ready":
@@ -713,7 +715,7 @@ public class teleOP extends LinearOpMode {
             //telemetry.addData("Intake Claw State: ", intakeClawState);
             //telemetry.addData("Depos Arm State: ", deposArmState);
             //telemetry.addData("Depos Wait: ", intakeWaitToReturn);
-            //telemetry.addData("Horizontal Drive Position: ", horizontalDrive.getCurrentPosition());
+            telemetry.addData("Horizontal Drive Position: ", horizontalDrive.getCurrentPosition());
 
 
             //telemetry.addData(" ", " ");

@@ -124,6 +124,8 @@ public class sampleAuto extends OpMode {
     Boolean autoIntakeMode = false;
     Boolean autoIntakeDebounce = false;
 
+    Boolean intakeRotateOverride = false;
+
     double verticalZeroValue = 0;
     double verticalLiftValue = 0;
     //endregion
@@ -453,33 +455,33 @@ public class sampleAuto extends OpMode {
                 LLResult cameraResult = limelight.getLatestResult();
                 double[] pythonOutputs = cameraResult.getPythonOutput();
 
-                if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 30) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     grabTimer = runtime.seconds();
+                    intakeRotateOverride = true;
                     //intakeClawState = true;
                     grabbing = true;
 
                     horizontalDrive.setPower(0);
 
-                    if (pythonOutputs[4] < 0.5) {
-                        intakeRotateState = true;
-                    } else {
-                        intakeRotateState = false;
-                    }
+                    double angle = pythonOutputs[3];
+                    double calculatedPosition = 1 - (0.00337777 * angle);
+
+                    intakeRotate.setPosition(calculatedPosition);
                 }
-                if (!grabbing && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                if (!grabbing && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 30) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     grabTimer = runtime.seconds();
+                    intakeRotateOverride = true;
                     //intakeClawState = true;
                     grabbing = true;
 
                     horizontalDrive.setPower(0);
 
-                    if (pythonOutputs[9] < 0.5) {
-                        intakeRotateState = true;
-                    } else {
-                        intakeRotateState = false;
-                    }
+                    double angle = pythonOutputs[10];
+                    double calculatedPosition = 1 - (0.00337777 * angle);
+
+                    intakeRotate.setPosition(calculatedPosition);
                 }
 
                 if (intakeClawState && opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.65)) {
@@ -666,17 +668,25 @@ public class sampleAuto extends OpMode {
         if (autoIntakeMode) {
             if (runtime.seconds() > grabTimer + 0.45 && grabbing) {
                 grabbing = false;
+                intakeRotateOverride = false;
             }
         } else {
             if (runtime.seconds() > grabTimer + 0.3 && grabbing) {
                 grabbing = false;
+                intakeRotateOverride = false;
             }
         }
         if (runtime.seconds() > grabTimer + 0.15 && grabbing && runtime.seconds() < grabTimer + 0.6) {
             intakeClawState = true;
         }
 
-        if (intakeRotateState) { intakeRotate.setPosition(0.38); } else { intakeRotate.setPosition(0.72); }
+        if (!intakeRotateOverride) {
+            if (intakeRotateState) {
+                intakeRotate.setPosition(0.38);
+            } else {
+                intakeRotate.setPosition(0.72);
+            }
+        }
 
         if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
 
@@ -850,7 +860,7 @@ public class sampleAuto extends OpMode {
                 wrist.setPosition(0.15);
                 break;
             case "Grab":
-                wrist.setPosition(0.69);
+                wrist.setPosition(0.705);
                 break;
         }
     }

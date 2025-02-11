@@ -1,5 +1,7 @@
 package pedroPathing.teamcode;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -7,6 +9,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+
 
 @TeleOp(name="Encoder Test", group="TeleOp")
 public class encoderTest extends LinearOpMode {
@@ -22,9 +25,12 @@ public class encoderTest extends LinearOpMode {
     private DcMotor verticalDrive = null;
     private ColorSensor colorSensor = null;
     private Servo indicatorServo;
+    private Limelight3A limelight = null;
 
     int state = 0;
     boolean stateDebounce = false;
+
+    boolean calculateDebounce = false;
 
     @Override
     public void runOpMode() {
@@ -44,6 +50,14 @@ public class encoderTest extends LinearOpMode {
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1"); // 'magLimVert1' is the name in the config file
         limitSwitch.setMode(DigitalChannel.Mode.INPUT);
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+        limelight.setPollRateHz(100);
+        //telemetry.setMsTransmissionInterval(11);
+        limelight.pipelineSwitch(0);
+        limelight.start();
+        limelight.reloadPipeline();
+
         state = 0;
         stateDebounce = false;
 
@@ -51,9 +65,10 @@ public class encoderTest extends LinearOpMode {
 
 
         while (opModeIsActive()) {
+
             if (gamepad2.a && !stateDebounce) {
                 state += 1;
-                state %= 4;
+                state %= 2;
                 stateDebounce = true;
             }
             if (stateDebounce && !gamepad2.a) {
@@ -61,20 +76,20 @@ public class encoderTest extends LinearOpMode {
             }
             switch (state) {
                 case 0:
-                    rotate.setPosition(1);
+                    rotate.setPosition(0.72);
+                    calculateDebounce = false;
                     break;
                 case 1:
-                    rotate.setPosition(0);
-                    break;
-                case 2:
-                    rotate.setPosition(0.72);
-                    break;
-                case 3:
-                    rotate.setPosition(0.38);
-                    break;
-                default:
-                    deposLeft.setPosition(0);
-                    deposRight.setPosition(1);
+                    if (!calculateDebounce) {
+                        LLResult cameraResult = limelight.getLatestResult();
+                        double[] pythonOutputs = cameraResult.getPythonOutput();
+
+                        double angle = pythonOutputs[10];
+                        double calculatedPosition = 1 - (0.00337777 * angle);
+
+                        rotate.setPosition(calculatedPosition);
+                        calculateDebounce = true;
+                    }
                     break;
             }
 

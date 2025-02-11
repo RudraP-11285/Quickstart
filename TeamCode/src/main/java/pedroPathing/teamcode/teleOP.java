@@ -153,6 +153,8 @@ public class teleOP extends LinearOpMode {
 
     double verticalZeroValue = 0;
     double verticalLiftValue = 0;
+
+    Boolean intakeRotateOverride = false;
     //endregion
 
     @Override
@@ -363,15 +365,15 @@ public class teleOP extends LinearOpMode {
 
                     outDrivePower = 0;
 
-                    if (verticalLiftValue > 60) {
-                        if (verticalLiftValue > 500) {
+                    if (verticalLiftValue > 50) {
+                        if (verticalLiftValue > 450) {
                             upDrivePower = -1;
                         } else {
-                            upDrivePower = -0.5;
+                            upDrivePower = -0.4;
                         }
                         //intakeWaitToReturn = true;
                     } else if (verticalLiftValue < 10) {
-                        upDrivePower = 0.5;
+                        upDrivePower = 0.35;
                     } else {
                         upDrivePower = 0;
                         deposClawState = false;
@@ -426,7 +428,13 @@ public class teleOP extends LinearOpMode {
             //region Intake Rotate Controls
             // NOTE: All code below controls the intake rotate
             // intakeRotateState = true (Not Transfer Position) or false (Transfer Position)
-            if (intakeRotateState) { intakeRotate.setPosition(0.38); } else { intakeRotate.setPosition(0.72); }
+            if (!intakeRotateOverride) {
+                if (intakeRotateState) {
+                    intakeRotate.setPosition(0.38);
+                } else {
+                    intakeRotate.setPosition(0.72);
+                }
+            }
             // Intake Rotate controls under different circumstances
             switch (robotState) {
                 case "Transfer Ready":
@@ -474,28 +482,41 @@ public class teleOP extends LinearOpMode {
                     } else if (autoIntakeMode) {
                         if (autoIntakeMode && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                             grabTimer = runtime.seconds();
+                            intakeRotateOverride = true;
                             //intakeClawState = true;
                             grabbing = true;
 
+                            double angle = pythonOutputs[3];
+                            double calculatedPosition = 1 - (0.00337777 * angle);
 
+                            intakeRotate.setPosition(calculatedPosition);
+                            /*
                             if (pythonOutputs[4] < 0.5) {
                                 intakeRotateState = true;
                             } else {
                                 intakeRotateState = false;
                             }
+                             */
                         }
 
-                        if (autoIntakeMode && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                        if (autoIntakeMode && (pythonOutputs[7] > 0.5) && (Math.abs(pythonOutputs[8]) < 120 && Math.abs(pythonOutputs[9]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                             grabTimer = runtime.seconds();
+                            intakeRotateOverride = true;
                             //intakeClawState = true;
                             grabbing = true;
 
+                            double angle = pythonOutputs[10];
+                            double calculatedPosition = 1 - (0.00337777 * angle);
 
+                            intakeRotate.setPosition(calculatedPosition);
+
+                            /*
                             if (pythonOutputs[9] < 0.5) {
                                 intakeRotateState = true;
                             } else {
                                 intakeRotateState = false;
                             }
+                             */
                         }
                     }
                     break;
@@ -516,13 +537,15 @@ public class teleOP extends LinearOpMode {
                 intakeClawDebounce = false;
             }
             if (autoIntakeMode) {
-                if (runtime.seconds() > grabTimer + 0.45 && grabbing) {
+                if (runtime.seconds() > grabTimer + 0.5 && grabbing) {
                     grabbing = false;
+                    intakeRotateOverride = false;
                     intakeRotateState = false;
                 }
             } else {
                 if (runtime.seconds() > grabTimer + 0.3 && grabbing) {
                     grabbing = false;
+                    intakeRotateOverride = false;
                     intakeRotateState = false;
                 }
             }
@@ -666,7 +689,9 @@ public class teleOP extends LinearOpMode {
 
             if (magVertOn && (upDrivePower < 0)) { // Negate downward movement if limit is active
                 upDrivePower = 0;
-            } else if ((verticalLiftValue > 3500) && (upDrivePower > 0)) { // Negate upward movement if too high
+            } else if (scoreState.equals("Sample") && (verticalLiftValue > 3500) && (upDrivePower > 0)) { // Negate upward movement if too high
+                upDrivePower = 0;
+            } else if (scoreState.equals("Specimen") && (verticalLiftValue > 500) && (upDrivePower > 0)) {
                 upDrivePower = 0;
             }
             //endregion
@@ -735,8 +760,8 @@ public class teleOP extends LinearOpMode {
             telemetry.addData("Pipeline", "Index: %d, Type: %s",
                     status.getPipelineIndex(), status.getPipelineType());
 
-            telemetry.addData("Blue Vertical",pythonOutputs[4]);
-            telemetry.addData("Yellow Vertical", pythonOutputs[9]);
+            telemetry.addData("Blue Angle",pythonOutputs[3]);
+            telemetry.addData("Yellow Angle", pythonOutputs[10]);
 
 
             if (result != null) {
@@ -802,8 +827,8 @@ public class teleOP extends LinearOpMode {
                 right.setPosition(0.25);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.2);
-                right.setPosition(0.8);
+                left.setPosition(0.35);
+                right.setPosition(0.65);
                 break;
             case "Specimen":
                 left.setPosition(0.2);

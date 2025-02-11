@@ -38,7 +38,7 @@ import pedroPathing.constants.LConstants;
  * @version 2.0, 11/28/2024
  */
 
-@Autonomous(name = "! 11285 SUPER Sample Autonomous", group = "! SUPER Autonomous")
+@Autonomous(name = "! BLUE PINEAPPLE COCONUT", group = "! SUPER Autonomous")
 public class sampleAuto extends OpMode {
 
     //region Declare Hardware
@@ -128,6 +128,9 @@ public class sampleAuto extends OpMode {
 
     double verticalZeroValue = 0;
     double verticalLiftValue = 0;
+
+    double horizontalZeroValue = 0;
+    double horizontalLiftValue = 0;
     //endregion
 
     private double timeStamp = 0.0;
@@ -248,7 +251,7 @@ public class sampleAuto extends OpMode {
         park.setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading());
 
         scoreSub = new Path(new BezierCurve(new Point(parkPose), /* Control Point */ new Point(parkScoreControlPose), new Point(scorePose)));
-        scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
+        scoreSub.setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading());
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -279,7 +282,7 @@ public class sampleAuto extends OpMode {
                 setPathState(1);
                 break;
             case 1: // Bring the lift up as we move
-                if (verticalRight.getCurrentPosition() < 3500) {
+                if (verticalLiftValue < 3500) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
@@ -298,9 +301,9 @@ public class sampleAuto extends OpMode {
             case 2: // Bring up the arm, wait, and drop
                 deposArmState = true;
 
-                if (verticalRight.getCurrentPosition() < 3500) {
-                    verticalLeft.setPower(-1);
-                    verticalRight.setPower(1);
+                if (verticalLiftValue < 3500) {
+                    verticalLeft.setPower(-0.65);
+                    verticalRight.setPower(0.65);
                 } else {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -350,7 +353,7 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 5: // Bring stuff down, grab when in position
-                if (verticalRight.getCurrentPosition() > 5) {
+                if (verticalLiftValue > 5) {
                     verticalLeft.setPower(0.8);
                     verticalRight.setPower(-0.8);
                 } else {
@@ -362,7 +365,7 @@ public class sampleAuto extends OpMode {
                 if (numberScored == 3) {
                     intakeRotateState = true;
 
-                    if (horizontalDrive.getCurrentPosition() < 175) {
+                    if (horizontalLiftValue < 175) {
                         horizontalDrive.setPower(0.2);
                     } else {
                         horizontalDrive.setPower(0);
@@ -386,8 +389,8 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 7: // Go to transfer position
-                if (horizontalDrive.getCurrentPosition() > 10) {
-                    horizontalDrive.setPower(-0.75);
+                if (horizontalLiftValue > 10) {
+                    horizontalDrive.setPower(-1);
                 } else {
                     horizontalDrive.setPower(0);
                 }
@@ -397,14 +400,14 @@ public class sampleAuto extends OpMode {
                 intakeClawState = true;
                 deposArmState = false;
 
-                if (verticalRight.getCurrentPosition() > 5) {
+                if (verticalLiftValue > 5) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
 
-                    if (!(horizontalDrive.getCurrentPosition() > 10)) {
+                    if (!(horizontalLiftValue > 10)) {
                         setPathState(8);
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     }
@@ -433,7 +436,7 @@ public class sampleAuto extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
-                if (horizontalDrive.getCurrentPosition() < 1400) {
+                if (horizontalLiftValue < 1200) {
                     horizontalDrive.setPower(0.5);
                 } else {
                     horizontalDrive.setPower(0);
@@ -441,21 +444,35 @@ public class sampleAuto extends OpMode {
                 intakeState = false;
                 autoIntakeMode = true;
 
-                if (!follower.isBusy() && !(horizontalDrive.getCurrentPosition() < 1400) && !(verticalLiftValue >= 15)) {
+                if (!follower.isBusy() && !(horizontalLiftValue < 1200) && !(verticalLiftValue >= 15)) {
                     setPathState(102);
                 }
                 break;
             case 102:
-                if (horizontalDrive.getCurrentPosition() > 100 && !grabbing) {
+                if (horizontalLiftValue > 100 && !grabbing) {
                     horizontalDrive.setPower(-0.3);
                 } else {
                     horizontalDrive.setPower(0);
                 }
 
+                double yaw     =  0.15 * Math.sin(opmodeTimer.getElapsedTimeSeconds() * (Math.PI));
+
+                double leftFrontPower  = + yaw;
+                double rightFrontPower = - yaw;
+                double leftBackPower   = + yaw;
+                double rightBackPower  = - yaw;
+
+                if (!intakeRotateOverride) {
+                    leftFrontDrive.setPower(leftFrontPower);
+                    rightFrontDrive.setPower(rightFrontPower);
+                    leftBackDrive.setPower(leftBackPower);
+                    rightBackDrive.setPower(rightBackPower);
+                }
+
                 LLResult cameraResult = limelight.getLatestResult();
                 double[] pythonOutputs = cameraResult.getPythonOutput();
 
-                if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 30) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 75 && Math.abs(pythonOutputs[2]) < 30) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     grabTimer = runtime.seconds();
                     intakeRotateOverride = true;
@@ -469,7 +486,7 @@ public class sampleAuto extends OpMode {
 
                     intakeRotate.setPosition(calculatedPosition);
                 }
-                if (!grabbing && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 120 && Math.abs(pythonOutputs[7]) < 30) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                if (!grabbing && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[6]) < 75 && Math.abs(pythonOutputs[7]) < 30) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     grabTimer = runtime.seconds();
                     intakeRotateOverride = true;
@@ -517,20 +534,20 @@ public class sampleAuto extends OpMode {
                     break;
                 }
 
-                if (horizontalDrive.getCurrentPosition() > 10) {
+                if (horizontalLiftValue > 10) {
                     horizontalDrive.setPower(-0.76);
                 } else {
                     horizontalDrive.setPower(0);
                 }
 
-                if (verticalRight.getCurrentPosition() > 5) {
+                if (verticalLiftValue > 5) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
 
-                    if (!(horizontalDrive.getCurrentPosition() > 10)) {
+                    if (!(horizontalLiftValue > 10)) {
                         setPathState(104);
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     }
@@ -560,13 +577,13 @@ public class sampleAuto extends OpMode {
                 setPathState(107);
                 break;
             case 107:
-                if (verticalRight.getCurrentPosition() < 3500) {
+                if (verticalLiftValue < 3500) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && (!(verticalLiftValue < 2900))) {
+                if((follower.getPose().getX() > (parkPose.getX() - 2.25) && follower.getPose().getY() > (parkPose.getY() - 2.25)) && (!(verticalLiftValue < 2900))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -579,9 +596,9 @@ public class sampleAuto extends OpMode {
             case 108:
                 deposArmState = true;
 
-                if (verticalRight.getCurrentPosition() < 3500) {
-                    verticalLeft.setPower(-1);
-                    verticalRight.setPower(1);
+                if (verticalLiftValue < 3500) {
+                    verticalLeft.setPower(-0.65);
+                    verticalRight.setPower(0.65);
                 } else {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -635,8 +652,12 @@ public class sampleAuto extends OpMode {
             verticalZeroValue = (double) verticalRight.getCurrentPosition();
         }
         verticalLiftValue = (double) (verticalRight.getCurrentPosition() - verticalZeroValue);
-        //endregion
 
+        if (magHorOn) {
+            horizontalZeroValue = (double) horizontalDrive.getCurrentPosition();
+        }
+        horizontalLiftValue = (double) (horizontalDrive.getCurrentPosition() - horizontalZeroValue);
+        //endregion
 
         if (intakeState) {
             moveWristTo("Close", intakeWrist);
@@ -666,7 +687,7 @@ public class sampleAuto extends OpMode {
             }
         }
         if (autoIntakeMode) {
-            if (runtime.seconds() > grabTimer + 0.45 && grabbing) {
+            if (runtime.seconds() > grabTimer + 0.5 && grabbing) {
                 grabbing = false;
                 intakeRotateOverride = false;
             }
@@ -886,7 +907,7 @@ public class sampleAuto extends OpMode {
 
     //region State Finding Functions
     // Check if horizontal slides are all the way in
-    public Boolean extendoClosed() { return (horizontalDrive.getCurrentPosition() < 25); }
+    public Boolean extendoClosed() { return (horizontalLiftValue < 25); }
     // Check if lift is all the way down
     public Boolean liftDown(DigitalChannel limitSwitch) { return (!limitSwitch.getState()); }
     // Check if wrist and arm are back and claw is rotated in transfer position

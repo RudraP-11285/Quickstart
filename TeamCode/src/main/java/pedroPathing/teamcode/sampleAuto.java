@@ -389,9 +389,9 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 7: // Go to transfer position
-                if (horizontalLiftValue < 50) {
+                if (horizontalLiftValue < 550) {
                     horizontalDrive.setPower(1);
-                } else if (horizontalLiftValue > 250) {
+                } else if (horizontalLiftValue > 650) {
                     horizontalDrive.setPower(-1);
                 } else {
                     horizontalDrive.setPower(0);
@@ -401,6 +401,7 @@ public class sampleAuto extends OpMode {
                 intakeRotateState = false;
                 intakeClawState = true;
                 deposArmState = false;
+                deposClawState = false;
 
                 if (verticalLiftValue > 5) {
                     verticalLeft.setPower(1);

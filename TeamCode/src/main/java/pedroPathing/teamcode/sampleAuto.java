@@ -389,7 +389,9 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 7: // Go to transfer position
-                if (horizontalLiftValue > 10) {
+                if (horizontalLiftValue < 50) {
+                    horizontalDrive.setPower(1);
+                } else if (horizontalLiftValue > 250) {
                     horizontalDrive.setPower(-1);
                 } else {
                     horizontalDrive.setPower(0);
@@ -406,6 +408,12 @@ public class sampleAuto extends OpMode {
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
+
+                    if (horizontalLiftValue > 10) {
+                        horizontalDrive.setPower(-1);
+                    } else {
+                        horizontalDrive.setPower(0);
+                    }
 
                     if (!(horizontalLiftValue > 10)) {
                         setPathState(8);

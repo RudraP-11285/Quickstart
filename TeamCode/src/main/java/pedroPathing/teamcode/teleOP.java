@@ -354,8 +354,8 @@ public class teleOP extends LinearOpMode {
 
             //region Return to Transfer
             // Bring everything back to the transfer position
-            if (gamepad2.b) {
-                if (horizontalDrive.getCurrentPosition() < 250 && verticalLiftValue > 60 && !intakeInTransferPosition(wristServoController)) {
+            if (gamepad2.b) { // && verticalLiftValue > 60
+                if (horizontalDrive.getCurrentPosition() < 450 && !intakeInTransferPosition(wristServoController)) {
                     outDrivePower = 1;
                 } else {
                     intakeState = true;
@@ -364,6 +364,10 @@ public class teleOP extends LinearOpMode {
                     deposArmState = false;
 
                     outDrivePower = 0;
+
+                    if (horizontalDrive.getCurrentPosition() > 450) {
+                        outDrivePower = -1;
+                    }
 
                     if (verticalLiftValue > 50) {
                         if (verticalLiftValue > 450) {
@@ -691,7 +695,7 @@ public class teleOP extends LinearOpMode {
                 upDrivePower = 0;
             } else if (scoreState.equals("Sample") && (verticalLiftValue > 3500) && (upDrivePower > 0)) { // Negate upward movement if too high
                 upDrivePower = 0;
-            } else if (scoreState.equals("Specimen") && (verticalLiftValue > 500) && (upDrivePower > 0)) {
+            } else if (scoreState.equals("Specimen") && (verticalLiftValue > 600) && (upDrivePower > 0)) {
                 upDrivePower = 0;
             }
             //endregion
@@ -831,8 +835,8 @@ public class teleOP extends LinearOpMode {
                 right.setPosition(0.65);
                 break;
             case "Specimen":
-                left.setPosition(0.2);
-                right.setPosition(0.8);
+                left.setPosition(0.18);
+                right.setPosition(0.82);
                 break;
         }
     }

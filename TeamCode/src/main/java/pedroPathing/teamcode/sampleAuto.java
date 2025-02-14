@@ -702,9 +702,15 @@ public class sampleAuto extends OpMode {
                 setPathState(107);
                 break;
             case 107:
+                deposArmState = true;
+
                 if (verticalLiftValue < 3500) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > 29) {
+                    deposClawState = false;
                 }
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
@@ -719,7 +725,7 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 108:
-                deposArmState = true;
+                //deposArmState = true;
 
                 if (verticalLiftValue < 3500) {
                     verticalLeft.setPower(-0.65);

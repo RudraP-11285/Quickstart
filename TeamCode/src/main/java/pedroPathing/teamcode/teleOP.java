@@ -121,7 +121,7 @@ public class teleOP extends LinearOpMode {
 
     // Sensors
     private DistanceSensor backDistance = null;
-    private Limelight3A limelight;
+    //private Limelight3A limelight;
     private ColorSensor colorSensor = null;
     private Servo indicatorServo;
     //endregion
@@ -202,15 +202,15 @@ public class teleOP extends LinearOpMode {
 
         // Get sensors here
         //backDistance = hardwareMap.get(DistanceSensor.class, "backDistance");
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        //limelight = hardwareMap.get(Limelight3A.class, "limelight");
         colorSensor = hardwareMap.get(ColorSensor.class, "colorsensor");
         indicatorServo = hardwareMap.get(Servo.class, "indicator_servo");
 
-        limelight.setPollRateHz(100);
+        //limelight.setPollRateHz(100);
         //telemetry.setMsTransmissionInterval(11);
-        limelight.pipelineSwitch(0);
-        limelight.start();
-        limelight.reloadPipeline();
+        //limelight.pipelineSwitch(0);
+        //limelight.start();
+        //limelight.reloadPipeline();
         //endregion
 
         //region Set States
@@ -465,8 +465,8 @@ public class teleOP extends LinearOpMode {
 
             //region Intake Claw Controls
             // NOTE: All code below controls the intake claw
-            LLResult cameraResult = limelight.getLatestResult();
-            double[] pythonOutputs = cameraResult.getPythonOutput();
+            //LLResult cameraResult = limelight.getLatestResult();
+            //double[] pythonOutputs = cameraResult.getPythonOutput();
 
             // intakeClawState = true (Closed) or false (Open)
             if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
@@ -483,7 +483,7 @@ public class teleOP extends LinearOpMode {
                             grabbing = true;
                         }
                         // If "x" pressed while grabbing, jab down and grab. Otherwise allow open and close
-                    } else if (autoIntakeMode) {
+                    } /* else if (autoIntakeMode) {
                         if (autoIntakeMode && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                             grabTimer = runtime.seconds();
                             intakeRotateOverride = true;
@@ -494,13 +494,6 @@ public class teleOP extends LinearOpMode {
                             double calculatedPosition = 1 - (0.00337777 * angle);
 
                             intakeRotate.setPosition(calculatedPosition);
-                            /*
-                            if (pythonOutputs[4] < 0.5) {
-                                intakeRotateState = true;
-                            } else {
-                                intakeRotateState = false;
-                            }
-                             */
                         }
 
                         if (autoIntakeMode && (pythonOutputs[7] > 0.5) && (Math.abs(pythonOutputs[8]) < 120 && Math.abs(pythonOutputs[9]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
@@ -513,16 +506,9 @@ public class teleOP extends LinearOpMode {
                             double calculatedPosition = 1 - (0.00337777 * angle);
 
                             intakeRotate.setPosition(calculatedPosition);
-
-                            /*
-                            if (pythonOutputs[9] < 0.5) {
-                                intakeRotateState = true;
-                            } else {
-                                intakeRotateState = false;
-                            }
-                             */
                         }
                     }
+                    */
                     break;
                 case "Transfer Ready":
                     // Do not allow opening. Keep it closed.
@@ -726,7 +712,7 @@ public class teleOP extends LinearOpMode {
             //region Telemetry
             int upDrivePos1 = verticalRight.getCurrentPosition();
             int upDrivePos2 = verticalLeft.getCurrentPosition();
-            LLResult result = limelight.getLatestResult();
+            //LLResult result = limelight.getLatestResult();
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -753,6 +739,7 @@ public class teleOP extends LinearOpMode {
             //telemetry.addData("Depos Servo Encoder: ", (deposLeftController.getCurrentPositionInDegrees()));
 
 
+            /*
             telemetry.addData("Connected?", limelight.isConnected());
             telemetry.addData("Running?", limelight.isRunning());
 
@@ -773,11 +760,12 @@ public class teleOP extends LinearOpMode {
             } else {
                 telemetry.addData("PythonOutput", "nothing.");
             }
+             */
 
             telemetry.update();
             //endregion
         }
-        limelight.stop();
+        //limelight.stop();
     }
 
 

@@ -460,7 +460,7 @@ public class sampleAuto extends OpMode {
                 break;
             case 102:
                 if (horizontalLiftValue > 100 && !grabbing) {
-                    horizontalDrive.setPower(-0.3);
+                    horizontalDrive.setPower(-0.15);
                 } else {
                     horizontalDrive.setPower(0);
                 }
@@ -470,6 +470,17 @@ public class sampleAuto extends OpMode {
 
                 LLResult cameraResult = limelight.getLatestResult();
                 double[] pythonOutputs = cameraResult.getPythonOutput();
+
+                double yellowXoffset = pythonOutputs[6];
+                double yellowYoffset = pythonOutputs[7];
+
+                double blueXoffset = pythonOutputs[1];
+                double blueYoffset = pythonOutputs[2];
+
+                telemetry.addData("Yellow X Offset", yellowXoffset);
+                telemetry.addData("Yellow Y Offset", yellowYoffset);
+                telemetry.addData("Blue X Offset", blueXoffset);
+                telemetry.addData("Blue Y Offset", blueYoffset);
 
                 if (opmodeTimer.getElapsedTimeSeconds() > grabTimer + 1) {
                     if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[2]) < 70) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
@@ -481,6 +492,11 @@ public class sampleAuto extends OpMode {
                             intakeRotateOverride = true;
                             //intakeClawState = true;
                             grabbing = true;
+
+                            leftFrontDrive.setPower(0);
+                            rightFrontDrive.setPower(0);
+                            leftBackDrive.setPower(0);
+                            rightBackDrive.setPower(0);
 
                             double angle = pythonOutputs[3];
                             double calculatedPosition = 1 - (0.00337777 * angle);
@@ -515,10 +531,10 @@ public class sampleAuto extends OpMode {
                         }
                     }
 
-                    if (!grabbing && (pythonOutputs[5] > 0.5) && (Math.abs(pythonOutputs[7]) < 70) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                    if (!grabbing && (pythonOutputs[7] > 0.5) && (Math.abs(pythonOutputs[9]) < 70) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                         horizontalDrive.setPower(0);
 
-                        if (Math.abs(pythonOutputs[6]) < 70) {
+                        if (Math.abs(pythonOutputs[8]) < 70) {
                             timeStamp = opmodeTimer.getElapsedTimeSeconds();
                             grabTimer = runtime.seconds();
                             intakeRotateOverride = true;
@@ -535,7 +551,7 @@ public class sampleAuto extends OpMode {
 
                             intakeRotate.setPosition(calculatedPosition);
                         } else {
-                            if (pythonOutputs[6] < 0) {
+                            if (pythonOutputs[8] < 0) {
                                 double lateral = 0.275;
 
                                 double leftFrontPower = +lateral * 1.1;
@@ -611,13 +627,12 @@ public class sampleAuto extends OpMode {
                     }
 
                     if (intakeClawState) {
-                        setPathState(103);
-                        //setPathState(9999);
-
                         scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), /* Control Point */ new Point(parkScoreControlPose), new Point(scorePose)));
                         scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
 
-                        follower.followPath(scoreSub, false);
+                        //follower.followPath(scoreSub, false);
+                        //setPathState(103);
+                        setPathState(9999);
 
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     }
@@ -712,6 +727,10 @@ public class sampleAuto extends OpMode {
                 } else {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > 29) {
+                    deposClawState = false;
                 }
 
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
@@ -946,8 +965,8 @@ public class sampleAuto extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        //setPathState(102);
-        setPathState(0);
+        setPathState(102);
+        //setPathState(0);
     }
 
     /** We do not use this because everything should automatically disable **/

@@ -471,8 +471,8 @@ public class sampleAuto extends OpMode {
                 LLResult cameraResult = limelight.getLatestResult();
                 double[] pythonOutputs = cameraResult.getPythonOutput();
 
-                double yellowXoffset = pythonOutputs[6];
-                double yellowYoffset = pythonOutputs[7];
+                double yellowXoffset = pythonOutputs[8];
+                double yellowYoffset = pythonOutputs[9];
 
                 double blueXoffset = pythonOutputs[1];
                 double blueYoffset = pythonOutputs[2];
@@ -504,7 +504,7 @@ public class sampleAuto extends OpMode {
                             intakeRotate.setPosition(calculatedPosition);
                         } else {
                             if (pythonOutputs[1] < 0) {
-                                double lateral = 0.275;
+                                double lateral = 0.215;
 
                                 double leftFrontPower = +lateral * 1.1;
                                 double rightFrontPower = -lateral * 1.1;
@@ -516,7 +516,7 @@ public class sampleAuto extends OpMode {
                                 leftBackDrive.setPower(leftBackPower);
                                 rightBackDrive.setPower(rightBackPower);
                             } else {
-                                double lateral = -0.275;
+                                double lateral = -0.215;
 
                                 double leftFrontPower = +lateral * 1.1;
                                 double rightFrontPower = -lateral * 1.1;
@@ -552,7 +552,7 @@ public class sampleAuto extends OpMode {
                             intakeRotate.setPosition(calculatedPosition);
                         } else {
                             if (pythonOutputs[8] < 0) {
-                                double lateral = 0.275;
+                                double lateral = 0.215;
 
                                 double leftFrontPower = +lateral * 1.1;
                                 double rightFrontPower = -lateral * 1.1;
@@ -564,7 +564,7 @@ public class sampleAuto extends OpMode {
                                 leftBackDrive.setPower(leftBackPower);
                                 rightBackDrive.setPower(rightBackPower);
                             } else {
-                                double lateral = -0.275;
+                                double lateral = -0.215;
 
                                 double leftFrontPower = +lateral * 1.1;
                                 double rightFrontPower = -lateral * 1.1;
@@ -630,9 +630,9 @@ public class sampleAuto extends OpMode {
                         scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), /* Control Point */ new Point(parkScoreControlPose), new Point(scorePose)));
                         scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
 
-                        //follower.followPath(scoreSub, false);
-                        //setPathState(103);
-                        setPathState(9999);
+                        follower.followPath(scoreSub, false);
+                        setPathState(103);
+                        //setPathState(9999);
 
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     }
@@ -965,8 +965,8 @@ public class sampleAuto extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        setPathState(102);
-        //setPathState(0);
+        //setPathState(102);
+        setPathState(0);
     }
 
     /** We do not use this because everything should automatically disable **/

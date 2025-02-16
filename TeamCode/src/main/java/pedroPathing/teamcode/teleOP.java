@@ -31,6 +31,9 @@ package pedroPathing.teamcode;
 
 import java.util.Arrays;
 
+import com.pedropathing.pathgen.BezierCurve;
+import com.pedropathing.pathgen.Path;
+import com.pedropathing.pathgen.Point;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -405,6 +408,7 @@ public class teleOP extends LinearOpMode {
                 }
             } else {
                 deposArmState = true;
+
                 if (!grabbing) {
                     moveWristTo("Open", intakeWrist);
                 } else {
@@ -423,6 +427,26 @@ public class teleOP extends LinearOpMode {
             if (gamepad2.a && (!intakeDebounce)) {
                 intakeDebounce = true;
                 intakeState = !intakeState;
+
+                // NEW ADDITION TO TEST
+                if (!intakeState) {
+                    if (intakeClawState) {
+                        float blueCPercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+                        float redCPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+                        float greenCPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+
+                        if (bluePercent > 0.40) {
+                            telemetry.addData("Blue Detected with", blueCPercent);
+                        } else if (redPercent > 0.35 && greenCPercent > 0.35) {
+                            telemetry.addData("Yellow Detected with", greenCPercent);
+                        } else if (redPercent > 0.40) {
+                            telemetry.addData("Red Detected with", redCPercent);
+                        } else {
+                            intakeClawState = false;
+                        }
+                    }
+                }
+                // NEW ADDITION TO TEST
             }
             if (!gamepad2.a && intakeDebounce) {
                 intakeDebounce = false;
@@ -483,7 +507,8 @@ public class teleOP extends LinearOpMode {
                             grabbing = true;
                         }
                         // If "x" pressed while grabbing, jab down and grab. Otherwise allow open and close
-                    } /* else if (autoIntakeMode) {
+                    }
+                    /* else if (autoIntakeMode) {
                         if (autoIntakeMode && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 120 && Math.abs(pythonOutputs[2]) < 60) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                             grabTimer = runtime.seconds();
                             intakeRotateOverride = true;

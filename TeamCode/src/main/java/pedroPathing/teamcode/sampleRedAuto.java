@@ -38,8 +38,8 @@ import pedroPathing.constants.LConstants;
  * @version 2.0, 11/28/2024
  */
 
-@Autonomous(name = "! BLUE PINEAPPLE COCONUT", group = "! SUPER Autonomous")
-public class sampleAuto extends OpMode {
+@Autonomous(name = "! RED PINEAPPLE COCONUT", group = "! SUPER Autonomous")
+public class sampleRedAuto extends OpMode {
 
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
@@ -160,7 +160,7 @@ public class sampleAuto extends OpMode {
     private final Pose scorePose = new Pose(15.5, 127.5, Math.toRadians(315)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(31.6, 123.50, Math.toRadians(0)); //x was 33.3 before
+    private final Pose pickup1Pose = new Pose(32, 123.50, Math.toRadians(0)); //x was 33.3 before
 
     /** Middle (Second) Sample from the Spike Mark */
     private final Pose pickup2Pose = new Pose(29.325, 132.25, Math.toRadians(0));
@@ -938,7 +938,7 @@ public class sampleAuto extends OpMode {
 
         limelight.setPollRateHz(100);
         //telemetry.setMsTransmissionInterval(11);
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(1);
         limelight.start();
         limelight.reloadPipeline();
         //endregion

@@ -459,12 +459,6 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 102:
-                if (horizontalLiftValue > 100 && !grabbing) {
-                    horizontalDrive.setPower(-0.15);
-                } else {
-                    horizontalDrive.setPower(0);
-                }
-
                 intakeState = false;
                 autoIntakeMode = true;
 
@@ -477,6 +471,12 @@ public class sampleAuto extends OpMode {
                 double blueXoffset = pythonOutputs[1];
                 double blueYoffset = pythonOutputs[2];
 
+                if (horizontalLiftValue > 100 && !grabbing) {
+                    horizontalDrive.setPower(-0.25);
+                } else {
+                    horizontalDrive.setPower(0);
+                }
+
                 telemetry.addData("Yellow X Offset", yellowXoffset);
                 telemetry.addData("Yellow Y Offset", yellowYoffset);
                 telemetry.addData("Blue X Offset", blueXoffset);
@@ -486,54 +486,7 @@ public class sampleAuto extends OpMode {
                     if (!grabbing && (pythonOutputs[7] > 0.5) && (Math.abs(pythonOutputs[9]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
                         horizontalDrive.setPower(0);
 
-                        if (Math.abs(pythonOutputs[8]) < 80) {
-                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                            grabTimer = runtime.seconds();
-                            intakeRotateOverride = true;
-                            //intakeClawState = true;
-                            grabbing = true;
-
-                            leftFrontDrive.setPower(0);
-                            rightFrontDrive.setPower(0);
-                            leftBackDrive.setPower(0);
-                            rightBackDrive.setPower(0);
-
-                            double angle = pythonOutputs[3];
-                            double calculatedPosition = 1 - (0.00337777 * angle);
-
-                            intakeRotate.setPosition(calculatedPosition);
-                        } else {
-                            if (pythonOutputs[8] < 0) {
-                                double lateral = -0.215;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            } else {
-                                double lateral = 0.215;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            }
-                        }
-                    }
-                    else if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[2]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
-                        horizontalDrive.setPower(0);
-
-                        if (Math.abs(pythonOutputs[1]) < 80) {
+                        if (Math.abs(pythonOutputs[8]) < 40) {
                             timeStamp = opmodeTimer.getElapsedTimeSeconds();
                             grabTimer = runtime.seconds();
                             intakeRotateOverride = true;
@@ -550,8 +503,8 @@ public class sampleAuto extends OpMode {
 
                             intakeRotate.setPosition(calculatedPosition);
                         } else {
-                            if (pythonOutputs[1] < 0) {
-                                double lateral = -0.215;
+                            if (pythonOutputs[8] < 0) {
+                                double lateral = -0.30;
 
                                 double leftFrontPower = +lateral * 1.125;
                                 double rightFrontPower = -lateral * 1.125;
@@ -563,7 +516,54 @@ public class sampleAuto extends OpMode {
                                 leftBackDrive.setPower(leftBackPower);
                                 rightBackDrive.setPower(rightBackPower);
                             } else {
-                                double lateral = 0.215;
+                                double lateral = 0.30;
+
+                                double leftFrontPower = +lateral * 1.125;
+                                double rightFrontPower = -lateral * 1.125;
+                                double leftBackPower = -lateral;
+                                double rightBackPower = +lateral;
+
+                                leftFrontDrive.setPower(leftFrontPower);
+                                rightFrontDrive.setPower(rightFrontPower);
+                                leftBackDrive.setPower(leftBackPower);
+                                rightBackDrive.setPower(rightBackPower);
+                            }
+                        }
+                    }
+                    else if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[2]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                        horizontalDrive.setPower(0);
+
+                        if (Math.abs(pythonOutputs[1]) < 40) {
+                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                            grabTimer = runtime.seconds();
+                            intakeRotateOverride = true;
+                            //intakeClawState = true;
+                            grabbing = true;
+
+                            leftFrontDrive.setPower(0);
+                            rightFrontDrive.setPower(0);
+                            leftBackDrive.setPower(0);
+                            rightBackDrive.setPower(0);
+
+                            double angle = pythonOutputs[3];
+                            double calculatedPosition = 1 - (0.00337777 * angle);
+
+                            intakeRotate.setPosition(calculatedPosition);
+                        } else {
+                            if (pythonOutputs[1] < 0) {
+                                double lateral = -0.3;
+
+                                double leftFrontPower = +lateral * 1.125;
+                                double rightFrontPower = -lateral * 1.125;
+                                double leftBackPower = -lateral;
+                                double rightBackPower = +lateral;
+
+                                leftFrontDrive.setPower(leftFrontPower);
+                                rightFrontDrive.setPower(rightFrontPower);
+                                leftBackDrive.setPower(leftBackPower);
+                                rightBackDrive.setPower(rightBackPower);
+                            } else {
+                                double lateral = 0.3;
 
                                 double leftFrontPower = +lateral * 1.125;
                                 double rightFrontPower = -lateral * 1.125;
@@ -578,40 +578,6 @@ public class sampleAuto extends OpMode {
                         }
                     }
                 }
-
-                /*
-                if (opmodeTimer.getElapsedTimeSeconds() > grabTimer + 0.8) {
-                    if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[1]) < 75 && Math.abs(pythonOutputs[2]) < 30) && !intakeClawState && (!intakeClawDebounce)) {
-                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                        grabTimer = runtime.seconds();
-                        intakeRotateOverride = true;
-                        //intakeClawState = true;
-                        grabbing = true;
-
-                        horizontalDrive.setPower(0);
-
-                        double angle = pythonOutputs[3];
-                        double calculatedPosition = 1 - (0.00337777 * angle);
-
-                        intakeRotate.setPosition(calculatedPosition);
-                    }
-                    if (!grabbing && (pythonOutputs[7] > 0.5) && (Math.abs(pythonOutputs[8]) < 75 && Math.abs(pythonOutputs[9]) < 30) && !intakeClawState && (!intakeClawDebounce)) {
-                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                        grabTimer = runtime.seconds();
-                        intakeRotateOverride = true;
-                        //intakeClawState = true;
-                        grabbing = true;
-
-                        horizontalDrive.setPower(0);
-
-                        double angle = pythonOutputs[10];
-                        double calculatedPosition = 1 - (0.00337777 * angle);
-
-                        intakeRotate.setPosition(calculatedPosition);
-                    }
-                }
-                */
-
 
                 if (intakeClawState && opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.65)) {
                     float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
@@ -633,8 +599,9 @@ public class sampleAuto extends OpMode {
                         scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), new Point(parkScoreControlPose), new Point(scorePose)));
                         scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
 
-                        follower.followPath(scoreSub, false);
+                        // SUBMERSIBLE GRAB
                         setPathState(103);
+                        //follower.followPath(scoreSub, false);
                         //setPathState(9999);
 
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -832,7 +799,7 @@ public class sampleAuto extends OpMode {
                 intakeRotateOverride = false;
             }
 
-            if (runtime.seconds() > grabTimer + 0.225 && grabbing && runtime.seconds() < grabTimer + 0.6) {
+            if (runtime.seconds() > grabTimer + 0.275 && grabbing && runtime.seconds() < grabTimer + 0.6) {
                 intakeClawState = true;
             }
         } else {
@@ -982,8 +949,9 @@ public class sampleAuto extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        //setPathState(102);
-        setPathState(0);
+        // These lines for SUBMERSIBLE GRAB
+        setPathState(102);
+        //setPathState(0);
     }
 
     /** We do not use this because everything should automatically disable **/

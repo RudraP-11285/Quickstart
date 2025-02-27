@@ -18,6 +18,8 @@ public class encoderTest extends LinearOpMode {
     private AnalogInput wristEncoder1; // First wire
     private DigitalChannel limitSwitch;
     private Servo intakeArm =  null; // Servo that rotates the claw up down
+    private Servo intakeWrist =  null; // Servo that rotates the claw up down
+    private Servo intakeRotate =  null; // Servo that rotates the claw left right
     private Servo rotate =  null; // Servo that rotates the claw up down
     private Servo deposLeft =  null; // Servo that rotates the claw up down
     private Servo deposRight =  null; // Servo that rotates the claw up downprivate Servo
@@ -38,6 +40,10 @@ public class encoderTest extends LinearOpMode {
         deposLeft = hardwareMap.get(Servo.class, "deposLeft"); // Exp. Hub P3
         deposRight = hardwareMap.get(Servo.class, "deposRight"); // Exp. Hub P3
 
+        intakeWrist = hardwareMap.get(Servo.class, "intakeWrist"); // Exp. Hub P3
+        intakeRotate = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
+        intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P1
+
         claw = hardwareMap.get(Servo.class, "intakeClaw"); // Exp. Hub P3
         colorSensor = hardwareMap.get(ColorSensor.class, "colorsensor");
         indicatorServo = hardwareMap.get(Servo.class, "indicator_servo");
@@ -50,13 +56,15 @@ public class encoderTest extends LinearOpMode {
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1"); // 'magLimVert1' is the name in the config file
         limitSwitch.setMode(DigitalChannel.Mode.INPUT);
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        //limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
+        /*
         limelight.setPollRateHz(100);
         //telemetry.setMsTransmissionInterval(11);
         limelight.pipelineSwitch(0);
         limelight.start();
         limelight.reloadPipeline();
+         */
 
         state = 0;
         stateDebounce = false;
@@ -65,33 +73,9 @@ public class encoderTest extends LinearOpMode {
 
 
         while (opModeIsActive()) {
-
-            if (gamepad2.a && !stateDebounce) {
-                state += 1;
-                state %= 2;
-                stateDebounce = true;
-            }
-            if (stateDebounce && !gamepad2.a) {
-                stateDebounce = false;
-            }
-            switch (state) {
-                case 0:
-                    rotate.setPosition(0.72);
-                    calculateDebounce = false;
-                    break;
-                case 1:
-                    if (!calculateDebounce) {
-                        LLResult cameraResult = limelight.getLatestResult();
-                        double[] pythonOutputs = cameraResult.getPythonOutput();
-
-                        double angle = pythonOutputs[10];
-                        double calculatedPosition = 1 - (0.00337777 * angle);
-
-                        rotate.setPosition(calculatedPosition);
-                        calculateDebounce = true;
-                    }
-                    break;
-            }
+            intakeArm.setPosition(0.7);
+            intakeWrist.setPosition(1);
+            intakeRotate.setPosition(0.72);
 
             float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
             float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());

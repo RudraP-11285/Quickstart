@@ -40,7 +40,6 @@ import pedroPathing.constants.LConstants;
 
 @Autonomous(name = "! BLUE PINEAPPLE COCONUT", group = "! SUPER Autonomous")
 public class sampleAuto extends OpMode {
-
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -131,6 +130,7 @@ public class sampleAuto extends OpMode {
 
     double horizontalZeroValue = 0;
     double horizontalLiftValue = 0;
+    MotorPIDController extendoController;
     //endregion
 
     private double timeStamp = 0.0;
@@ -466,15 +466,17 @@ public class sampleAuto extends OpMode {
                 double[] pythonOutputs = cameraResult.getPythonOutput();
 
                 double yellowXoffset = pythonOutputs[8];
+                double yellowXoffsetIN = yellowXoffset/120;
                 double yellowYoffset = pythonOutputs[9];
+                double yellowYoffsetIN = yellowYoffset/120;
 
                 double blueXoffset = pythonOutputs[1];
+                double blueXoffsetIN = blueXoffset/120;
                 double blueYoffset = pythonOutputs[2];
+                double blueYoffsetIN = blueYoffset/120;
 
                 if (horizontalLiftValue > 100 && !grabbing) {
-                    horizontalDrive.setPower(-0.25);
-                } else {
-                    horizontalDrive.setPower(0);
+                    extendoController.setTargetPosition(25, 0.25, "Ticks");
                 }
 
                 telemetry.addData("Yellow X Offset", yellowXoffset);
@@ -929,6 +931,8 @@ public class sampleAuto extends OpMode {
         intakeArmServoController = new ContinuousServoController(dummy, armEncoder1);
         //endregion
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        extendoController = new MotorPIDController(horizontalDrive, 0.015, 0, 0.0003, 0.1, (double) (700 / 180), 537.6, 4.941);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();

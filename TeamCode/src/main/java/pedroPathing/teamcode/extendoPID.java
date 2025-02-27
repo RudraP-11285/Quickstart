@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 public class extendoPID extends OpMode {
     private PIDController extendoController;
-    public static double p= 0.015, i=0., d=0.0003;
+    public static double p= 0.015, i=0, d=0.0003;
     public static double f = 0.1;
     public static int target = 1;
     private final double ticks_in_degree = 700 / 180.0;

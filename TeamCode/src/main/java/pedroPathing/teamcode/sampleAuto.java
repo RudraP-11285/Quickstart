@@ -475,9 +475,22 @@ public class sampleAuto extends OpMode {
                 double blueYoffset = pythonOutputs[2];
                 double blueYoffsetIN = blueYoffset/120;
 
+                /*
+                if ((int) yellowYoffsetIN != 0) {
+                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + yellowYoffsetIN, 1, "Inches");
+                } else if ((int) blueYoffsetIN != 0) {
+                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + blueYoffsetIN, 1, "Inches");
+                } else if (horizontalLiftValue > 100 && !grabbing) {
+                    extendoController.setTargetPosition(25, 0.25, "Ticks");
+                }
+                */
+
+
+
                 if (horizontalLiftValue > 100 && !grabbing) {
                     extendoController.setTargetPosition(25, 0.25, "Ticks");
                 }
+
 
                 telemetry.addData("Yellow X Offset", yellowXoffset);
                 telemetry.addData("Yellow Y Offset", yellowYoffset);
@@ -506,7 +519,7 @@ public class sampleAuto extends OpMode {
                             intakeRotate.setPosition(calculatedPosition);
                         } else {
                             if (pythonOutputs[8] < 0) {
-                                double lateral = -0.30;
+                                double lateral = -0.25;
 
                                 double leftFrontPower = +lateral * 1.125;
                                 double rightFrontPower = -lateral * 1.125;
@@ -518,7 +531,7 @@ public class sampleAuto extends OpMode {
                                 leftBackDrive.setPower(leftBackPower);
                                 rightBackDrive.setPower(rightBackPower);
                             } else {
-                                double lateral = 0.30;
+                                double lateral = 0.25;
 
                                 double leftFrontPower = +lateral * 1.125;
                                 double rightFrontPower = -lateral * 1.125;
@@ -553,7 +566,7 @@ public class sampleAuto extends OpMode {
                             intakeRotate.setPosition(calculatedPosition);
                         } else {
                             if (pythonOutputs[1] < 0) {
-                                double lateral = -0.3;
+                                double lateral = -0.25;
 
                                 double leftFrontPower = +lateral * 1.125;
                                 double rightFrontPower = -lateral * 1.125;
@@ -565,7 +578,7 @@ public class sampleAuto extends OpMode {
                                 leftBackDrive.setPower(leftBackPower);
                                 rightBackDrive.setPower(rightBackPower);
                             } else {
-                                double lateral = 0.3;
+                                double lateral = 0.25;
 
                                 double leftFrontPower = +lateral * 1.125;
                                 double rightFrontPower = -lateral * 1.125;
@@ -796,12 +809,12 @@ public class sampleAuto extends OpMode {
             }
         }
         if (autoIntakeMode) {
-            if (runtime.seconds() > grabTimer + 0.5 && grabbing) {
+            if (runtime.seconds() > grabTimer + 0.7 && grabbing) {
                 grabbing = false;
                 intakeRotateOverride = false;
             }
 
-            if (runtime.seconds() > grabTimer + 0.275 && grabbing && runtime.seconds() < grabTimer + 0.6) {
+            if (runtime.seconds() > grabTimer + 0.3 && grabbing && runtime.seconds() < grabTimer + 0.6) {
                 intakeClawState = true;
             }
         } else {

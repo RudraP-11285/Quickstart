@@ -52,7 +52,7 @@ public class encoderTest extends LinearOpMode {
         armEncoder1 = hardwareMap.get(AnalogInput.class, "armEncoder1");
         deposEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
         wristEncoder1 = hardwareMap.get(AnalogInput.class, "wristEncoder1");
-        verticalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+        verticalDrive = hardwareMap.get(DcMotor.class, "leftRear");
         limitSwitch = hardwareMap.get(DigitalChannel.class, "magLimHorizontal1"); // 'magLimVert1' is the name in the config file
         limitSwitch.setMode(DigitalChannel.Mode.INPUT);
 
@@ -73,46 +73,7 @@ public class encoderTest extends LinearOpMode {
 
 
         while (opModeIsActive()) {
-            intakeArm.setPosition(0.7);
-            intakeWrist.setPosition(1);
-            intakeRotate.setPosition(0.72);
-
-            float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-            float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-            float greenPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-
-            if (bluePercent > 0.40) {
-                indicatorServo.setPosition(0.611);
-            } else if (redPercent > 0.35 && greenPercent > 0.35) {
-                indicatorServo.setPosition(0.388);
-            } else if (redPercent > 0.40) {
-                indicatorServo.setPosition(0.279);
-            } else {
-                indicatorServo.setPosition(1);
-            }
-
-
-            boolean isPressed = !limitSwitch.getState(); // Usually, "false" means pressed
-
-            // Display the state on the telemetry
-            telemetry.addData("Limit Switch Pressed", isPressed);
-            telemetry.addData("Horizontal Drive Position: ", verticalDrive.getCurrentPosition());
-
-            telemetry.addData("Intake Arm Encoder in Degrees:", (armEncoder1.getVoltage() / armEncoder1.getMaxVoltage()) * 360.0);
-            telemetry.addData("Depos Arm Encoder in Degrees:", (deposEncoder1.getVoltage() / deposEncoder1.getMaxVoltage()) * 360.0);
-            telemetry.addData("Wrist Encoder in Degrees:", (wristEncoder1.getVoltage() / wristEncoder1.getMaxVoltage()) * 360.0);
-
-            telemetry.addData("Color Sensor Blue:", colorSensor.blue());
-            telemetry.addData("Color Sensor Red:", colorSensor.red());
-            telemetry.addData("Color Sensor Green:", colorSensor.green());
-
-            telemetry.addData("Color Sensor Blue, %:", bluePercent);
-            telemetry.addData("Color Sensor Red, %:", redPercent);
-            telemetry.addData("Color Sensor Green, %:", greenPercent);
-
-            telemetry.addData("Color Sensor:", colorSensor.argb());
-
-            telemetry.addData("State:", state);
+            verticalDrive.setPower(gamepad1.right_stick_y);
 
             telemetry.update();
         }

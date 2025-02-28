@@ -1,10 +1,14 @@
 Expansion Hub:
     Motor:
-        0 - verticalRight
-        1 - verticalLeft
+        IGNORE RN // 0 - verticalRight
+        IGNORE RN // 1 - verticalLeft
+        REPLACEMENT PORT // 1 - verticalRight
+        REPLACEMENT PORT // 2 - verticalLeft
+        REPLACEMENT PORT // 0 - leftRear
         3 - horizontalDrive
     Servo:
         0 - deposClaw
+        1 - indicator_servo
     Analog Input Devices:
         0 - depositEncoder1
         1 - depositEncoder2
@@ -14,7 +18,7 @@ Control Hub:
         0 - leftFront
         1 - rightFront
         2 - rightRear
-        3 - leftRear
+        IGNORE RN // 3 - leftRear
     Servo:
         0 - deposLeft
         1 - deposRight
@@ -31,6 +35,8 @@ Control Hub:
         0 - wristEncoder1
         1 - wristEncoder2
         2 - armEncoder1
-        2 - armEncoder2
+        3 - armEncoder2
     I2C Bus 1:
-        0 - backDistance
+        0 - colorsensor
+    I2C Bus 2:
+        0 -

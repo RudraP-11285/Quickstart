@@ -477,18 +477,18 @@ public class sampleAuto extends OpMode {
 
                 /*
                 if ((int) yellowYoffsetIN != 0) {
-                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + yellowYoffsetIN, 1, "Inches");
+                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + yellowYoffsetIN, 1, "Inches", horizontalLiftValue);
                 } else if ((int) blueYoffsetIN != 0) {
-                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + blueYoffsetIN, 1, "Inches");
+                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + blueYoffsetIN, 1, "Inches", horizontalLiftValue);
                 } else if (horizontalLiftValue > 100 && !grabbing) {
-                    extendoController.setTargetPosition(25, 0.25, "Ticks");
+                    extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
                 }
                 */
 
 
 
                 if (horizontalLiftValue > 100 && !grabbing) {
-                    extendoController.setTargetPosition(25, 0.25, "Ticks");
+                    extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
                 }
 
 
@@ -946,7 +946,6 @@ public class sampleAuto extends OpMode {
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         extendoController = new MotorPIDController(horizontalDrive, 0.015, 0, 0.0003, 0.1, (double) (700 / 180), 537.6, 4.941);
-
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();

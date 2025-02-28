@@ -23,11 +23,11 @@ public class MotorPIDController {
         this.f = f;
     }
 
-    public void setTargetPosition(double target, double speed, String units) {
+    public void setTargetPosition(double target, double speed, String units, double encoderValue) {
         switch (units) {
             case "Inches":
                 int targetTicks = (int) (target * ticksPerInch);
-                double pid = controller.calculate(motor.getCurrentPosition(), targetTicks);
+                double pid = controller.calculate(encoderValue, targetTicks);
                 double ff = Math.cos(Math.toRadians(targetTicks / ticksInDegree)) * f;
 
                 double value = (pid + ff);
@@ -40,7 +40,7 @@ public class MotorPIDController {
                 break;
             case "Ticks":
                 int targetTicks1 = (int) (target);
-                double pid1 = controller.calculate(motor.getCurrentPosition(), targetTicks1);
+                double pid1 = controller.calculate(encoderValue, targetTicks1);
                 double ff1 = Math.cos(Math.toRadians(targetTicks1 / ticksInDegree)) * f;
 
                 double value1 = (pid1 + ff1);

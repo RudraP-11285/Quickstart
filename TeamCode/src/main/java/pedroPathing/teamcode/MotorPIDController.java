@@ -30,9 +30,9 @@ public class MotorPIDController {
                 double pid = controller.calculate(encoderValue, targetTicks);
                 double ff = Math.cos(Math.toRadians(targetTicks / ticksInDegree)) * f;
 
-                double value = (pid + ff);
+                double value = pid + ff;
                 double max = 1.0;
-                double min = 0.0;
+                double min = -1.0;
 
                 double cappedSpeed = Math.min(Math.max(value, min), max);
 
@@ -43,9 +43,9 @@ public class MotorPIDController {
                 double pid1 = controller.calculate(encoderValue, targetTicks1);
                 double ff1 = Math.cos(Math.toRadians(targetTicks1 / ticksInDegree)) * f;
 
-                double value1 = (pid1 + ff1);
+                double value1 = pid1 + ff1;
                 double max1 = 1.0;
-                double min1 = 0.0;
+                double min1 = -1.0;
 
                 double cappedSpeed1 = Math.min(Math.max(value1, min1), max1);
 
@@ -61,7 +61,7 @@ public class MotorPIDController {
             case "Ticks":
                 return motor.getCurrentPosition();
             default:
-                return motor.getCurrentPosition();
+                return motor.getCurrentPosition() / ticksPerInch;
         }
     }
 }

@@ -20,8 +20,8 @@ Control Hub:
         2 - rightRear
         IGNORE RN // 3 - leftRear
     Servo:
-        0 - deposLeft
-        1 - deposRight
+        0 - deposExtendo
+        1 - deposArm
         2 - intakeArm
         3 - intakeClaw
         4 - intakeRotate

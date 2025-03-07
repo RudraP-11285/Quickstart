@@ -18,12 +18,11 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import java.util.Objects;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
@@ -59,8 +58,8 @@ public class specimenAuto extends OpMode {
 
     // All 3 of the Outtake Servos plugged into Control Hub
     private Servo deposClaw =  null; // Edward
-    private Servo deposLeft =  null; // Stuart
-    private Servo deposRight =  null; // Felicia
+    private Servo deposExtendo =  null; // Stuart
+    private Servo deposArm =  null; // Felicia
 
     private AnalogInput depositEncoder1 = null;
     private AnalogInput depositEncoder2 = null;
@@ -130,7 +129,12 @@ public class specimenAuto extends OpMode {
 
     double horizontalZeroValue = 0;
     double horizontalLiftValue = 0;
+
+    double horizontalLiftTargetIN = 0;
+    double xOffsetBlock = 0;
     MotorPIDController extendoController;
+    MotorPIDController liftControllerRight;
+    MotorPIDController liftControllerLeft;
     //endregion
 
     private double timeStamp = 0.0;
@@ -157,7 +161,13 @@ public class specimenAuto extends OpMode {
     private final Pose startPose = new Pose(9, 63, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(37.5, 66, Math.toRadians(0)); //13.5, 127.5
+    private final Pose scorePose = new Pose(42.5, 67, Math.toRadians(0)); //13.5, 127.5
+
+    private final Pose scorePose1 = new Pose(42.5, 66, Math.toRadians(0)); //13.5, 127.5
+    private final Pose scorePose2 = new Pose(42.5, 66, Math.toRadians(0)); //13.5, 127.5
+    private final Pose scorePose3 = new Pose(42.5, 66, Math.toRadians(0)); //13.5, 127.5
+
+    private final Pose subGrabPose = new Pose(41.5, 66, Math.toRadians(0)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(25.7, 37.5, Math.toRadians(-33)); //x was 33.3 before
@@ -184,7 +194,7 @@ public class specimenAuto extends OpMode {
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    private Path scorePreload, park, scoreSub;
+    private Path scorePreload, park, scoreSub, grabSub, grabBlockPath;
     private PathChain grabPickup1, grabPickup2, grabPickup3, dropPickup1, dropPickup2, dropPickup3;
 
     private PathChain[] grabPaths = {grabPickup1, grabPickup2, grabPickup3};
@@ -212,6 +222,11 @@ public class specimenAuto extends OpMode {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
+
+
+        grabSub = new Path(new BezierLine(new Point(scorePose), new Point(subGrabPose)));
+        //grabSub.setLinearHeadingInterpolation(scorePose.getHeading(), subGrabPose.getHeading());
+        grabSub.setConstantHeadingInterpolation(scorePose.getHeading());
 
         /* Here is an example for Constant Interpolation
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
@@ -269,12 +284,20 @@ public class specimenAuto extends OpMode {
                 deposClawState = true;
                 intakeClawState = false;
                 intakeRotateState = false;
+                autoIntakeMode = true;
+                intakeState = false;
 
                 follower.followPath(scorePreload, true);
+                scoreState = "Specimen";
                 setPathState(1);
                 break;
             case 1:
-                if (!follower.isBusy()) {
+                extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+
+                liftControllerRight.setTargetPosition(1250, 1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                if (!follower.isBusy() && Math.abs(verticalLiftValue - 1250) < 50) {
                     setPathState(2);
                     numberScored++;
 
@@ -282,33 +305,313 @@ public class specimenAuto extends OpMode {
                 }
                 break;
             case 2: // Initialize and move to score position for preload
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 3)) { // 0.3 before CHANGED
+                extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+
+                deposClawState = false;
+
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.33)) { // 0.3 before CHANGED
                     break;
                 }
 
+                liftControllerRight.setTargetPosition(1700, 1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                if (Math.abs(verticalLiftValue - 1625) < 50) {
+                    setPathState(5);
+                    scoreState = "Sample";
+
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                    break;
+                }
+                break;
+            case 3:
+                follower.followPath(grabSub, true);
+                setPathState(5);
+                break;
+            case 4:
+                /*
+                if (follower.isBusy() && opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) { // 0.3 before CHANGED
+                    extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+                    break;
+                }
+
+                /*
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 10)) {
+                    setPathState(999);
+                    break;
+                }
+                 */
+
+                /*
+                liftControllerRight.setTargetPosition(25, -1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                intakeState = false;
+                autoIntakeMode = true;
+
+                LLResult cameraResult = limelight.getLatestResult();
+                double[] pythonOutputs = cameraResult.getPythonOutput();
+
+                double yellowXoffset = pythonOutputs[8];
+                double yellowXoffsetIN = yellowXoffset/120;
+                double yellowYoffset = pythonOutputs[9];
+                double yellowYoffsetIN = yellowYoffset/120;
+
+                double blueXoffset = pythonOutputs[1];
+                double blueXoffsetIN = blueXoffset/120;
+                double blueYoffset = pythonOutputs[2];
+                double blueYoffsetIN = blueYoffset/120;
+
+
+                /*
+                if ((int) yellowYoffsetIN != 0) {
+                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + yellowYoffsetIN, 1, "Inches", horizontalLiftValue);
+                } else if ((int) blueYoffsetIN != 0) {
+                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + blueYoffsetIN, 1, "Inches", horizontalLiftValue);
+                } else if (horizontalLiftValue > 100 && !grabbing) {
+                    extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
+                }
+                */
+
+
+                /*
+                if (horizontalLiftValue > 100 && !grabbing) {
+                    extendoController.setTargetPosition(25, -0.25, "Ticks", horizontalLiftValue);
+                    telemetry.addData("Bringing Extendo Back", horizontalLiftValue);
+                }
+
+
+
+                telemetry.addData("Horizontal Value", horizontalLiftValue);
+                telemetry.addData("Blue X Offset Inches", blueXoffsetIN);
+                telemetry.addData("Blue Y Offset Inches", blueYoffsetIN);
+
+                if (opmodeTimer.getElapsedTimeSeconds() > grabTimer + 0.45) {
+                   if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[2]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
+                        horizontalDrive.setPower(0);
+
+                        if (Math.abs(pythonOutputs[1]) < 40) {
+                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                            grabTimer = runtime.seconds();
+                            intakeRotateOverride = true;
+                            //intakeClawState = true;
+
+                            leftFrontDrive.setPower(0);
+                            rightFrontDrive.setPower(0);
+                            leftBackDrive.setPower(0);
+                            rightBackDrive.setPower(0);
+
+                            double angle = pythonOutputs[3];
+                            double calculatedPosition = 1 - (0.00337777 * angle);
+
+                            //intakeRotate.setPosition(calculatedPosition);
+                            //grabbing = true;
+                        } else {
+                            if (pythonOutputs[1] < 0) {
+                                double lateral = -0.25;
+
+                                double leftFrontPower = +lateral * 1.125;
+                                double rightFrontPower = -lateral * 1.125;
+                                double leftBackPower = -lateral;
+                                double rightBackPower = +lateral;
+
+                                leftFrontDrive.setPower(leftFrontPower);
+                                rightFrontDrive.setPower(rightFrontPower);
+                                leftBackDrive.setPower(leftBackPower);
+                                rightBackDrive.setPower(rightBackPower);
+                            } else {
+                                double lateral = 0.25;
+
+                                double leftFrontPower = +lateral * 1.125;
+                                double rightFrontPower = -lateral * 1.125;
+                                double leftBackPower = -lateral;
+                                double rightBackPower = +lateral;
+
+                                leftFrontDrive.setPower(leftFrontPower);
+                                rightFrontDrive.setPower(rightFrontPower);
+                                leftBackDrive.setPower(leftBackPower);
+                                rightBackDrive.setPower(rightBackPower);
+                            }
+                        }
+                    }
+                } /*else if (horizontalLiftValue > 100) {
+                    extendoController.setTargetPosition(25, -0.3, "Ticks", horizontalLiftValue);
+                    telemetry.addData("Bringing Extendo Back", horizontalLiftValue);
+                }*/
+
+                /*
+                if (intakeClawState && opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.65)) {
+                    float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+                    float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+                    float greenPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
+
+                    if (bluePercent > 0.40) {
+                        telemetry.addData("Blue Detected with", bluePercent);
+                    } else if (redPercent > 0.35 && greenPercent > 0.35) {
+                        telemetry.addData("Yellow Detected with", greenPercent);
+                    } else if (redPercent > 0.40) {
+                        telemetry.addData("Red Detected with", redPercent);
+                    } else {
+                        intakeClawState = false;
+                        intakeRotateState = false;
+                    }
+
+                    if (intakeClawState) {
+                        scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), new Point(parkScoreControlPose), new Point(scorePose)));
+                        scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
+
+                        // SUBMERSIBLE GRAB
+                        setPathState(999);
+                        //follower.followPath(scoreSub, false);
+                        //setPathState(9999);
+
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                    }
+                }
+                break;
+                */
+            case 5:
+                if (follower.isBusy() && opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) { // 0.3 before CHANGED
+                    extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+                    telemetry.addData("WAITING", "");
+                    break;
+                }
+
+                liftControllerRight.setTargetPosition(25, 1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                intakeState = false;
+                autoIntakeMode = true;
+
+                LLResult cameraResult = limelight.getLatestResult();
+                double[] pythonOutputs = cameraResult.getPythonOutput();
+
+                if (pythonOutputs[0] > 0.1) {
+                    double blueXoffset = pythonOutputs[1];
+                    double blueXoffsetIN = blueXoffset/120;
+                    double blueYoffset = pythonOutputs[2];
+                    double blueYoffsetIN = blueYoffset/120;
+
+                    telemetry.addData("Horizontal Value", horizontalLiftValue);
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Blue X Offset Inches", blueXoffsetIN);
+                    telemetry.addData("Blue Y Offset Inches", blueYoffsetIN);
+
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - blueYoffsetIN - 0.7;
+                    xOffsetBlock = blueXoffsetIN;
+                    setPathState(6);
+                    break;
+                } else {
+                    extendoController.setTargetPosition(25, 0.5, "Ticks", horizontalLiftValue);
+
+                    telemetry.addData("WE SEE NOTHING", horizontalLiftValue);
+                }
+
+                break;
+            case 6:
+                final Pose grabBlockPose = new Pose(42.5, 66 - xOffsetBlock, Math.toRadians(0)); //13.5, 127.5
+
+                grabBlockPath = new Path(new BezierLine(new Point(follower.getPose()), new Point(grabBlockPose)));
+                grabBlockPath.setConstantHeadingInterpolation(follower.getPose().getHeading());
+
+                follower.followPath(grabBlockPath, true);
+                setPathState(7);
+                break;
+            case 7:
+                double posIN = extendoController.getCurrentPosition("Inches");
+
+                telemetry.addData("Position Inches", posIN);
+                telemetry.addData("Target Position", horizontalLiftTargetIN);
+
+                if (horizontalLiftTargetIN - posIN > 0) {
+                    extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
+                    telemetry.addData("Moving", "Back");
+                } else if (horizontalLiftTargetIN - posIN < 0) {
+                    extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
+                    telemetry.addData("Moving", "Forward");
+                }
+
+                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.1) {
+                    setPathState(8);
+                    break;
+                }
+
+                break;
+            case 8:
+                liftControllerRight.setTargetPosition(25, 1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                intakeState = false;
+                autoIntakeMode = true;
+
+                cameraResult = limelight.getLatestResult();
+                pythonOutputs = cameraResult.getPythonOutput();
+
+                if (pythonOutputs[0] > 0.1) {
+                    double blueXoffset = pythonOutputs[1];
+                    double blueXoffsetIN = blueXoffset/120;
+                    double blueYoffset = pythonOutputs[2];
+                    double blueYoffsetIN = blueYoffset/120;
+
+                    telemetry.addData("Horizontal Value", horizontalLiftValue);
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Blue X Offset Inches", blueXoffsetIN);
+                    telemetry.addData("Blue Y Offset Inches", blueYoffsetIN);
+
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - blueYoffsetIN - 0.7;
+                    xOffsetBlock = blueXoffsetIN;
+                    setPathState(9);
+                    break;
+                } else {
+                    extendoController.setTargetPosition(25, 0.5, "Ticks", horizontalLiftValue);
+
+                    telemetry.addData("WE SEE NOTHING", horizontalLiftValue);
+                }
+
+                break;
+            case 9:
+                posIN = extendoController.getCurrentPosition("Inches");
+
+                telemetry.addData("Position Inches", posIN);
+                telemetry.addData("Target Position", horizontalLiftTargetIN);
+
+                if (horizontalLiftTargetIN - posIN > 0) {
+                    extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
+                    telemetry.addData("Moving", "Back");
+                } else if (horizontalLiftTargetIN - posIN < 0) {
+                    extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
+                    telemetry.addData("Moving", "Forward");
+                }
+
+                break;
+            case 100:
                 switch (numberScored) {
                     case 1:
                         follower.followPath(grabPickup1, true);
                     case 2:
-                        follower.followPath(grabPickup2, true);
+                        follower.followPath(grabPickup1, true);
                     case 3:
-                        follower.followPath(grabPickup3, true);
+                        follower.followPath(grabPickup1, true);
                     case 4:
                         setPathState(999);
-                        break;
                 }
+                numberScored++;
 
-                setPathState(3);
+                setPathState(101);
                 break;
-            case 3:
+            case 101:
+                extendoController.setTargetPosition(25, 1, "Ticks", horizontalLiftValue);
+
                 if (!follower.isBusy() && Math.abs(Math.toRadians(follower.getPose().getHeading()) - 333) < 10) {
-                    setPathState(4);
+                    setPathState(102);
                     numberScored++;
 
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 4:
+            case 102:
+                extendoController.setTargetPosition(25, 1, "Ticks", horizontalLiftValue);
+
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 3)) { // 0.3 before CHANGED
                     break;
                 }
@@ -322,11 +625,11 @@ public class specimenAuto extends OpMode {
                         follower.followPath(dropPickup3, true);
                 }
 
-                setPathState(5);
+                setPathState(103);
                 break;
-            case 5:
+            case 103:
                 if (!follower.isBusy() && Math.abs(Math.toRadians(follower.getPose().getHeading()) - 225) < 10) {
-                    setPathState(2);
+                    setPathState(100);
                 }
                 break;
             case 999:
@@ -380,7 +683,7 @@ public class specimenAuto extends OpMode {
                 }
             }
         } else {
-            deposArmState = true;
+            //deposArmState = true;
             if (!grabbing) {
                 moveWristTo("Open", intakeWrist);
             } else {
@@ -427,19 +730,33 @@ public class specimenAuto extends OpMode {
 
         if (intakeClawState) { intakeClaw.setPosition(0); } else { intakeClaw.setPosition(1); }
 
-        if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
+        if (scoreState.equals("Sample")) {
+            deposExtendo.setPosition(0.38);
+            if (deposClawState && deposClaw.getPosition() != 1) { deposClaw.setPosition(1); } else if (!deposClawState && deposClaw.getPosition() != 0.45) { deposClaw.setPosition(0.45); }
+        } else if (scoreState.equals("Specimen")) {
+            deposClaw.setPosition(1);
+            if (verticalLiftValue > 500) {
+                if (deposClawState && deposExtendo.getPosition() != 0.38) {
+                    deposExtendo.setPosition(0.38);
+                } else if (!deposClawState && deposExtendo.getPosition() != 0.585) {
+                    deposExtendo.setPosition(0.585);
+                }
+            } else {
+                deposExtendo.setPosition(0.38);
+            }
+        }
 
         if (deposArmState) {
             switch (scoreState) {
                 case "Sample":
-                    moveDeposTo("Depos", deposLeft, deposRight);
+                    moveDeposTo("Depos", deposArm);
                     break;
                 case "Specimen":
-                    moveDeposTo("Specimen", deposLeft, deposRight);
+                    moveDeposTo("Specimen", deposArm);
                     break;
             }
         } else {
-            moveDeposTo("Transfer", deposLeft, deposRight);
+            moveDeposTo("Transfer", deposArm);
         }
 
         // These loop the movements of the robot
@@ -483,8 +800,8 @@ public class specimenAuto extends OpMode {
 
         // All 3 output servos
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
-        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
-        deposRight = hardwareMap.get(Servo.class, "deposRight");
+        deposExtendo = hardwareMap.get(Servo.class, "deposExtendo");
+        deposArm = hardwareMap.get(Servo.class, "deposArm");
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -521,6 +838,10 @@ public class specimenAuto extends OpMode {
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         verticalLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        verticalRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        verticalLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         magLimVertical1.setMode(DigitalChannel.Mode.INPUT);
@@ -534,7 +855,9 @@ public class specimenAuto extends OpMode {
         //endregion
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        extendoController = new MotorPIDController(horizontalDrive, 0.015, 0, 0.0003, 0.1, (double) (700 / 180), 537.6, 4.941);
+        extendoController = new MotorPIDController(horizontalDrive, 0.010, 0, 0.0003, 0.1, (double) (700 / 180), 537.6, 4.941);
+        liftControllerRight = new MotorPIDController(verticalRight, 0.008, 0, 0.00055, 0.5, (double) (700 / 180), 384.5, 4.5);
+        liftControllerLeft = new MotorPIDController(verticalRight, 0.008, 0, 0.00055, 0.5, (double) (700 / 180), 384.5, 4.5);
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
@@ -547,7 +870,9 @@ public class specimenAuto extends OpMode {
 
     /** This method is called continuously after Init while waiting for "play". **/
     @Override
-    public void init_loop() {}
+    public void init_loop() {
+        deposExtendo.setPosition(0.38);
+    }
 
     /** This method is called once at the start of the OpMode.
      * It runs all the setup actions, including building paths and starting the path system **/
@@ -576,7 +901,7 @@ public class specimenAuto extends OpMode {
                 }
                 break;
             case "Close": // Equal to transfer position
-                arm.setPosition(0.9); // 0
+                arm.setPosition(0.85); // 0.9 before
                 break;
             case "Grab": // Equal to grab position
                 arm.setPosition(0.475);
@@ -607,19 +932,16 @@ public class specimenAuto extends OpMode {
     }
 
 
-    public void moveDeposTo(String state, Servo left, Servo right) {
+    public void moveDeposTo(String state, Servo arm) {
         switch (state) {
             case "Transfer": // Equal to grab position
-                left.setPosition(0.75);
-                right.setPosition(0.25);
+                arm.setPosition(0.25);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.30);
-                right.setPosition(0.70);
+                arm.setPosition(0.725);
                 break;
             case "Specimen":
-                left.setPosition(0.2);
-                right.setPosition(0.8);
+                arm.setPosition(0.78);
                 break;
         }
     }

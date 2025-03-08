@@ -169,24 +169,24 @@ public class specimenAuto extends OpMode {
     private final Pose scorePose2 = new Pose(43, 70, Math.toRadians(0)); //13.5, 127.5
     private final Pose scorePose3 = new Pose(43, 67.5, Math.toRadians(0)); //13.5, 127.5
 
-    private final Pose dropIntake = new Pose(18.407, 44.5, Math.toRadians(-128));
+    private final Pose dropIntake = new Pose(18.407, 44.5, Math.toRadians(-108));
 
-    private final Pose subGrabPose = new Pose(41.5, 66, Math.toRadians(0)); //13.5, 127.5
+    private final Pose behindSub = new Pose(27.23, 70, Math.toRadians(-108)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(25.7, 37.5, Math.toRadians(-33)); //x was 33.3 before
+    private final Pose pickup1Pose = new Pose(25.7, 21, Math.toRadians(-33)); //x was 33.3 before
 
     /** Middle (Second) Sample from the Spike Mark */
-    private final Pose pickup2Pose = new Pose(25.7, 27.5, Math.toRadians(-33));
+    private final Pose pickup2Pose = new Pose(25.7, 21, Math.toRadians(-33));
 
     /** Highest (Third) Sample from the Spike Mark */
-    private final Pose pickup3Pose = new Pose(25.7, 17.5, Math.toRadians(-33)); // y was 129.55 before
+    private final Pose pickup3Pose = new Pose(25.7, 21, Math.toRadians(-33)); // y was 129.55 before
 
-    private final Pose dropPose1 = new Pose(25.7, 32.5, Math.toRadians(-136));
+    private final Pose dropPose1 = new Pose(24.7, 21, Math.toRadians(-136));
 
-    private final Pose dropPose2 = new Pose(25.7, 22.5, Math.toRadians(-136));
+    private final Pose dropPose2 = new Pose(24.7, 21, Math.toRadians(-136));
 
-    private final Pose dropPose3 = new Pose(25.7, 17.5, Math.toRadians(-136));
+    private final Pose dropPose3 = new Pose(24.7, 21, Math.toRadians(-136));
 
     /** Park Pose for our robot, after we do all of the scoring. */
     private final Pose parkPose = new Pose(13.230359520639148, 15.723035952063917, Math.toRadians(0));
@@ -198,11 +198,11 @@ public class specimenAuto extends OpMode {
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    private Path scorePreload, park, scoreSub, dropGrab;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, dropPickup1, dropPickup2, dropPickup3;
+    private Path scorePreload, park, scoreSub, backSub, dropGrab;
+    private Path grabPickup1, grabPickup2, grabPickup3, dropPickup1, dropPickup2, dropPickup3;
 
-    private PathChain[] grabPaths = {grabPickup1, grabPickup2, grabPickup3};
-    private PathChain[] scorePaths = {dropPickup1, dropPickup2, dropPickup3};
+    //private PathChain[] grabPaths = {grabPickup1, grabPickup2, grabPickup3};
+    //private PathChain[] scorePaths = {dropPickup1, dropPickup2, dropPickup3};
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -228,49 +228,38 @@ public class specimenAuto extends OpMode {
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
 
 
-        dropGrab = new Path(new BezierLine(new Point(scorePose), new Point(dropIntake)));
-        dropGrab.setLinearHeadingInterpolation(scorePose.getHeading(), dropIntake.getHeading());
+        dropGrab = new Path(new BezierLine(new Point(behindSub), new Point(dropIntake)));
+        dropGrab.setLinearHeadingInterpolation(behindSub.getHeading(), dropIntake.getHeading());
         //dropGrab.setConstantHeadingInterpolation(scorePose.getHeading());
+
+
+        backSub = new Path(new BezierLine(new Point(scorePose), new Point(behindSub)));
+        //backSub.setLinearHeadingInterpolation(scorePose.getHeading(), dropIntake.getHeading());
+        backSub.setConstantHeadingInterpolation(behindSub.getHeading());
 
 
         /* Here is an example for Constant Interpolation
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(scorePose), new Point(pickup1Pose)))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                .build();
+        grabPickup1 = new Path(new BezierLine(new Point(dropIntake), new Point(pickup1Pose)));
+        grabPickup1.setLinearHeadingInterpolation(dropIntake.getHeading(), pickup1Pose.getHeading());
 
-        /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        dropPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup1Pose), new Point(dropPose1)))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), dropPose1.getHeading())
-                .build();
+        dropPickup1 = new Path(new BezierLine(new Point(pickup1Pose), new Point(dropPose1)));
+        dropPickup1.setLinearHeadingInterpolation(pickup1Pose.getHeading(), dropPose1.getHeading());
 
-        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(dropPose1), new Point(pickup2Pose)))
-                .setLinearHeadingInterpolation(dropPose1.getHeading(), pickup2Pose.getHeading())
-                .build();
+        grabPickup2 = new Path(new BezierLine(new Point(dropPose1), new Point(pickup2Pose)));
+        grabPickup2.setLinearHeadingInterpolation(dropPose1.getHeading(), pickup2Pose.getHeading());
 
-        /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        dropPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup2Pose), new Point(dropPose2)))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), dropPose2.getHeading())
-                .build();
+        dropPickup2 = new Path(new BezierLine(new Point(pickup2Pose), new Point(dropPose2)));
+        dropPickup2.setLinearHeadingInterpolation(pickup2Pose.getHeading(), dropPose2.getHeading());
 
-        /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(dropPose2), new Point(pickup3Pose)))
-                .setLinearHeadingInterpolation(dropPose2.getHeading(), pickup3Pose.getHeading())
-                .build();
+        grabPickup3 = new Path(new BezierLine(new Point(dropPose2), new Point(pickup3Pose)));
+        grabPickup3.setLinearHeadingInterpolation(dropPose2.getHeading(), pickup3Pose.getHeading());
 
-        /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        dropPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickup3Pose), new Point(dropPose3)))
-                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), dropPose3.getHeading())
-                .build();
+        dropPickup3 = new Path(new BezierLine(new Point(pickup3Pose), new Point(dropPose3)));
+        dropPickup3.setLinearHeadingInterpolation(pickup3Pose.getHeading(), dropPose3.getHeading());
+
 
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
         park = new Path(new BezierCurve(new Point(scorePose), /* Control Point */ new Point(parkControlPose), new Point(parkPose)));
@@ -508,8 +497,14 @@ public class specimenAuto extends OpMode {
 
                     horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - blueYoffsetIN - 1.5;
                     xOffsetBlock = blueXoffsetIN;
-                    setPathState(6);
-                    break;
+
+                    if (2 * blueXoffsetIN + horizontalLiftTargetIN > 11.2) {
+                        extendoController.setTargetPosition(25, 0.60, "Ticks", horizontalLiftValue);
+                        telemetry.addData("TOO FAR!", horizontalLiftValue);
+                    } else {
+                        setPathState(6);
+                        break;
+                    }
                 } else {
                     extendoController.setTargetPosition(25, 0.60, "Ticks", horizontalLiftValue);
 
@@ -610,7 +605,6 @@ public class specimenAuto extends OpMode {
                         grabbing = true;
 
                         intakeRotate.setPosition(calculatedPosition);
-                        setPathState(9);
                         break;
                     }
                     break;
@@ -626,69 +620,97 @@ public class specimenAuto extends OpMode {
                 break;
                 //endregion
             case 8:
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.33)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.85)) {
+                    break;
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 1.25)) { // 0.3 before CHANGED
                     extendoController.setTargetPosition(25, 1, "Ticks", horizontalLiftValue);
                     break;
                 }
-                follower.followPath(dropGrab, true);
+
+
+                backSub = new Path(new BezierLine(new Point(follower.getPose()), new Point(behindSub)));
+                backSub.setLinearHeadingInterpolation(follower.getPose().getHeading(), behindSub.getHeading());
+
+
+                follower.followPath(backSub, true);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+
                 setPathState(9);
                 break;
             case 9:
-                if (follower.isBusy() || horizontalLiftValue < 1100) {
-                    extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+                if (follower.isBusy()) {
                     break;
                 }
+                follower.followPath(dropGrab, true);
+                setPathState(10);
+                break;
+            case 10:
+                if (follower.isBusy() || horizontalLiftValue < 1100) {
+                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.75)) {
+                        extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+                    }
+                    break;
+                }
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 intakeClawState = false;
+                setPathState(100);
                 break;
             case 100:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) { // 0.3 before CHANGED
+                    break;
+                }
+
                 switch (numberScored) {
                     case 1:
                         follower.followPath(grabPickup1, true);
+                        break;
                     case 2:
-                        follower.followPath(grabPickup1, true);
+                        follower.followPath(grabPickup2, true);
+                        break;
                     case 3:
-                        follower.followPath(grabPickup1, true);
+                        follower.followPath(grabPickup3, true);
+                        break;
                     case 4:
                         setPathState(999);
+                        break;
                 }
                 numberScored++;
 
                 setPathState(101);
                 break;
             case 101:
-                extendoController.setTargetPosition(25, 1, "Ticks", horizontalLiftValue);
-
-                if (!follower.isBusy() && Math.abs(Math.toRadians(follower.getPose().getHeading()) - 333) < 10) {
-                    setPathState(102);
-                    numberScored++;
-
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                }
-                break;
-            case 102:
-                extendoController.setTargetPosition(25, 1, "Ticks", horizontalLiftValue);
-
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 3)) { // 0.3 before CHANGED
+                if (follower.isBusy()) { // 0.3 before CHANGED
                     break;
                 }
 
                 switch (numberScored) {
                     case 2:
                         follower.followPath(dropPickup1, true);
+                        break;
                     case 3:
                         follower.followPath(dropPickup2, true);
+                        break;
                     case 4:
                         follower.followPath(dropPickup3, true);
+                        break;
                 }
 
-                setPathState(103);
+                setPathState(102);
                 break;
-            case 103:
-                if (!follower.isBusy() && Math.abs(Math.toRadians(follower.getPose().getHeading()) - 225) < 10) {
-                    setPathState(100);
+            case 102:
+                if (follower.isBusy()) {
+                    break;
                 }
+
+                setPathState(100);
                 break;
             case 999:
+                follower.turn(Math.toRadians(180), true);
+                setPathState(1000);
+                break;
+            case 1000:
                 break;
         }
     }
@@ -822,6 +844,7 @@ public class specimenAuto extends OpMode {
         // Feedback to Driver Hub
         telemetry.addData("rotation", follower.getPose().getHeading());
         telemetry.addData("path state", pathState);
+        telemetry.addData("scored count", numberScored);
         telemetry.addData("FOLLOWER BUSY", follower.isBusy());
         telemetry.addData("claw state", intakeClawState);
         telemetry.addData("x", follower.getPose().getX());
@@ -962,7 +985,7 @@ public class specimenAuto extends OpMode {
         opmodeTimer.resetTimer();
         // These lines for SUBMERSIBLE GRAB
         //setPathState(102);
-        setPathState(0);
+        setPathState(999);
     }
 
     /** We do not use this because everything should automatically disable **/

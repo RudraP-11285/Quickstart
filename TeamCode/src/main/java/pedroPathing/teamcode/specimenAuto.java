@@ -275,6 +275,7 @@ public class specimenAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
+                //region Initialize and Move to Score
                 deposClawState = true;
                 intakeClawState = false;
                 intakeRotateState = false;
@@ -285,7 +286,9 @@ public class specimenAuto extends OpMode {
                 scoreState = "Specimen";
                 setPathState(1);
                 break;
+                //endregion
             case 1:
+                //region Bring Lift Up and Extendo Out as we move
                 extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
 
                 liftControllerRight.setTargetPosition(1150, 1, "Ticks", verticalLiftValue);
@@ -298,7 +301,9 @@ public class specimenAuto extends OpMode {
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
+                //endregion
             case 2: // Initialize and move to score position for preload
+                //region Begin Begin Clipping
                 extendoController.setTargetPosition(1150, 1, "Ticks", horizontalLiftValue);
 
                 deposClawState = false;
@@ -311,156 +316,15 @@ public class specimenAuto extends OpMode {
                 verticalLeft.setPower(verticalRight.getPower());
 
                 if (Math.abs(verticalLiftValue - 1600) < 50) {
-                    setPathState(5);
+                    setPathState(3);
                     scoreState = "Sample";
 
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     break;
                 }
                 break;
-            case 4:
-                /*
-                if (follower.isBusy() && opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) { // 0.3 before CHANGED
-                    extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
-                    break;
-                }
-
-                /*
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 10)) {
-                    setPathState(999);
-                    break;
-                }
-                 */
-
-                /*
-                liftControllerRight.setTargetPosition(25, -1, "Ticks", verticalLiftValue);
-                verticalLeft.setPower(verticalRight.getPower());
-
-                intakeState = false;
-                autoIntakeMode = true;
-
-                LLResult cameraResult = limelight.getLatestResult();
-                double[] pythonOutputs = cameraResult.getPythonOutput();
-
-                double yellowXoffset = pythonOutputs[8];
-                double yellowXoffsetIN = yellowXoffset/120;
-                double yellowYoffset = pythonOutputs[9];
-                double yellowYoffsetIN = yellowYoffset/120;
-
-                double blueXoffset = pythonOutputs[1];
-                double blueXoffsetIN = blueXoffset/120;
-                double blueYoffset = pythonOutputs[2];
-                double blueYoffsetIN = blueYoffset/120;
-
-
-                /*
-                if ((int) yellowYoffsetIN != 0) {
-                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + yellowYoffsetIN, 1, "Inches", horizontalLiftValue);
-                } else if ((int) blueYoffsetIN != 0) {
-                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + blueYoffsetIN, 1, "Inches", horizontalLiftValue);
-                } else if (horizontalLiftValue > 100 && !grabbing) {
-                    extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
-                }
-                */
-
-
-                /*
-                if (horizontalLiftValue > 100 && !grabbing) {
-                    extendoController.setTargetPosition(25, -0.25, "Ticks", horizontalLiftValue);
-                    telemetry.addData("Bringing Extendo Back", horizontalLiftValue);
-                }
-
-
-
-                telemetry.addData("Horizontal Value", horizontalLiftValue);
-                telemetry.addData("Blue X Offset Inches", blueXoffsetIN);
-                telemetry.addData("Blue Y Offset Inches", blueYoffsetIN);
-
-                if (opmodeTimer.getElapsedTimeSeconds() > grabTimer + 0.45) {
-                    if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[2]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
-                        horizontalDrive.setPower(0);
-
-                        if (Math.abs(pythonOutputs[1]) < 40) {
-                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                            grabTimer = runtime.seconds();
-                            intakeRotateOverride = true;
-                            //intakeClawState = true;
-
-                            leftFrontDrive.setPower(0);
-                            rightFrontDrive.setPower(0);
-                            leftBackDrive.setPower(0);
-                            rightBackDrive.setPower(0);
-
-                            double angle = pythonOutputs[3];
-                            double calculatedPosition = 1 - (0.00337777 * angle);
-
-                            //intakeRotate.setPosition(calculatedPosition);
-                            //grabbing = true;
-                        } else {
-                            if (pythonOutputs[1] < 0) {
-                                double lateral = -0.25;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            } else {
-                                double lateral = 0.25;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            }
-                        }
-                    }
-                } /*else if (horizontalLiftValue > 100) {
-                    extendoController.setTargetPosition(25, -0.3, "Ticks", horizontalLiftValue);
-                    telemetry.addData("Bringing Extendo Back", horizontalLiftValue);
-                }*/
-
-                /*
-                if (intakeClawState && opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.65)) {
-                    float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-                    float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-                    float greenPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-
-                    if (bluePercent > 0.40) {
-                        telemetry.addData("Blue Detected with", bluePercent);
-                    } else if (redPercent > 0.35 && greenPercent > 0.35) {
-                        telemetry.addData("Yellow Detected with", greenPercent);
-                    } else if (redPercent > 0.40) {
-                        telemetry.addData("Red Detected with", redPercent);
-                    } else {
-                        intakeClawState = false;
-                        intakeRotateState = false;
-                    }
-
-                    if (intakeClawState) {
-                        scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), new Point(parkScoreControlPose), new Point(scorePose)));
-                        scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
-
-                        // SUBMERSIBLE GRAB
-                        setPathState(999);
-                        //follower.followPath(scoreSub, false);
-                        //setPathState(9999);
-
-                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                    }
-                }
-                break;
-                */
-            case 5:
+                //endregion
+            case 3:
                 //region Calculate Required Extendo Position
                 if (follower.isBusy() || opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) { // 0.3 before CHANGED
                     extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
@@ -502,7 +366,7 @@ public class specimenAuto extends OpMode {
                         extendoController.setTargetPosition(25, 0.60, "Ticks", horizontalLiftValue);
                         telemetry.addData("TOO FAR!", horizontalLiftValue);
                     } else {
-                        setPathState(6);
+                        setPathState(4);
                         break;
                     }
                 } else {
@@ -513,7 +377,7 @@ public class specimenAuto extends OpMode {
 
                 break;
                 //endregion
-            case 6:
+            case 4:
                 //region Move Extendo to Calculated Position
                 if (follower.isBusy()) {
                     break;
@@ -534,13 +398,13 @@ public class specimenAuto extends OpMode {
                     telemetry.addData("Matching", "Positions");
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
 
-                    setPathState(7);
+                    setPathState(5);
                     break;
                 }
 
                 break;
                 //endregion
-            case 7:
+            case 5:
                 //region Strafe to Block Position
                 liftControllerRight.setTargetPosition(25, 1, "Ticks", verticalLiftValue);
                 verticalLeft.setPower(verticalRight.getPower());
@@ -594,7 +458,7 @@ public class specimenAuto extends OpMode {
 
                     if (Math.abs(pythonOutputs[1]) < 55) {
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                        setPathState(8);
+                        setPathState(6);
 
                         double angle = pythonOutputs[3];
                         double calculatedPosition = 1 - (0.00337777 * angle);
@@ -619,7 +483,7 @@ public class specimenAuto extends OpMode {
 
                 break;
                 //endregion
-            case 8:
+            case 6:
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.85)) {
                     break;
                 }
@@ -637,16 +501,16 @@ public class specimenAuto extends OpMode {
                 follower.followPath(backSub, true);
                 timeStamp = opmodeTimer.getElapsedTimeSeconds();
 
-                setPathState(9);
+                setPathState(7);
                 break;
-            case 9:
+            case 7:
                 if (follower.isBusy()) {
                     break;
                 }
                 follower.followPath(dropGrab, true);
-                setPathState(10);
+                setPathState(8);
                 break;
-            case 10:
+            case 8:
                 if (follower.isBusy() || horizontalLiftValue < 1100) {
                     if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.75)) {
                         extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
@@ -958,6 +822,19 @@ public class specimenAuto extends OpMode {
             chosenPose = 3;
         }
 
+        telemetry.addData("Chosen Pose", chosenPose);
+        telemetry.update();
+    }
+
+    /** This method is called once at the start of the OpMode.
+     * It runs all the setup actions, including building paths and starting the path system **/
+    @Override
+    public void start() {
+        opmodeTimer.resetTimer();
+        // These lines for SUBMERSIBLE GRAB
+        setPathState(0);
+        //setPathState(999);
+
         switch (chosenPose) {
             case 2:
                 scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose2)));
@@ -972,20 +849,6 @@ public class specimenAuto extends OpMode {
                 scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose3.getHeading());
                 break;
         }
-
-
-        telemetry.addData("Chosen Pose", chosenPose);
-        telemetry.update();
-    }
-
-    /** This method is called once at the start of the OpMode.
-     * It runs all the setup actions, including building paths and starting the path system **/
-    @Override
-    public void start() {
-        opmodeTimer.resetTimer();
-        // These lines for SUBMERSIBLE GRAB
-        //setPathState(102);
-        setPathState(999);
     }
 
     /** We do not use this because everything should automatically disable **/

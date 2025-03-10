@@ -1,6 +1,7 @@
 package pedroPathing.teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -39,14 +40,25 @@ public class encoderTest extends LinearOpMode {
     boolean calculateDebounce = false;
 
     public static int direction = 1;
+    double verticalLiftValue = 0;
+    double verticalZeroValue = 0;
+    private DigitalChannel magLimVertical1 = null;
+
+
+    MotorPIDController liftControllerRight;
+    MotorPIDController liftControllerLeft;
+    Boolean magVertOn = false;
 
     String liftstate = "up";
 
     @Override
     public void runOpMode() {
-        intakeArm = hardwareMap.get(Servo.class, "intakeArm"); // Exp. Hub P3
-        deposLeft = hardwareMap.get(Servo.class, "deposLeft"); // Exp. Hub P3
-        deposRight = hardwareMap.get(Servo.class, "deposRight"); // Exp. Hub P3
+        liftControllerRight = new MotorPIDController(verticalRight, 0.006, 0, 0.00055, 0.5, (double) (700 / 180), 384.5, 4.5);
+        liftControllerLeft = new MotorPIDController(verticalLeft, 0.006, 0, 0.00055, 0.5, (double) (700 / 180), 384.5, 4.5);
+
+
+        magLimVertical1 = hardwareMap.get(DigitalChannel.class, "magLimVertical1");
+
 
         intakeWrist = hardwareMap.get(Servo.class, "intakeWrist"); // Exp. Hub P3
         intakeRotate = hardwareMap.get(Servo.class, "intakeRotate"); // Exp. Hub P2
@@ -73,15 +85,22 @@ public class encoderTest extends LinearOpMode {
 
 
         while (opModeIsActive()) {
+            magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
+
+            if (magVertOn) {
+                verticalZeroValue = (double) verticalRight.getCurrentPosition();
+            }
+            verticalLiftValue = (double) (verticalRight.getCurrentPosition() - verticalZeroValue);
+
             //verticalLeft.setPower(gamepad1.left_stick_y * direction);
             //verticalRight.setPower(-(gamepad1.left_stick_y * direction));
 
 
             switch (liftstate) {
                 case "up":
-                    if (verticalRight.getCurrentPosition() < 2500) {
-                        verticalLeft.setPower(-1 * direction);
-                        verticalRight.setPower(1 * direction);
+                    if (verticalRight.getCurrentPosition() < 1900) {
+                        liftControllerRight.setTargetPosition(2000, 1, "Ticks", verticalLiftValue);
+                        verticalLeft.setPower(verticalRight.getPower());
                     } else {
                         sleep(500);
                         liftstate = "down";
@@ -90,9 +109,9 @@ public class encoderTest extends LinearOpMode {
                     }
                     break;
                 case "down":
-                    if (verticalRight.getCurrentPosition() > 250) {
-                        verticalLeft.setPower(1 * direction);
-                        verticalRight.setPower(-1 * direction);
+                    if (verticalRight.getCurrentPosition() > 25) {
+                        liftControllerRight.setTargetPosition(0, 1, "Ticks", verticalLiftValue);
+                        verticalLeft.setPower(verticalRight.getPower());
                     } else {
                         sleep(500);
                         liftstate = "up";

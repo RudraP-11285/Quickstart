@@ -171,27 +171,30 @@ public class specimenAuto extends OpMode {
     private final Pose scorePose2 = new Pose(43, 70, Math.toRadians(0)); //13.5, 127.5
     private final Pose scorePose3 = new Pose(43, 67.5, Math.toRadians(0)); //13.5, 127.5
 
-    private final Pose dropIntake = new Pose(15.531291611185088, 22.434087882822908, Math.toRadians(0));
+    private final Pose dropIntake = new Pose(15.531291611185088, 18.934087882822908, Math.toRadians(0));
 
     private final Pose behindSub = new Pose(27.23, 70, Math.toRadians(0)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(25.310252996005325, 23.009320905459383, Math.toRadians(0)); //x was 33.3 before
+    private final Pose pickup1Pose = new Pose(22.531291611185088, 18.934087882822908, Math.toRadians(0)); //x was 33.3 before
 
     /** Middle (Second) Sample from the Spike Mark */
-    private final Pose pickup2Pose = new Pose(26.26897470039947, 13.038615179760312, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(22.53897470039947, 8.238615179760312, Math.toRadians(0));
 
     /** Highest (Third) Sample from the Spike Mark */
-    private final Pose pickup3Pose = new Pose(30.870838881491345, 19.174434087882823, Math.toRadians(-47)); // y was 129.55 before
+    private final Pose pickup3Pose = new Pose(26.819906790945407, 15.531291611185091, Math.toRadians(-50)); // y was 129.55 before
 
-    private final Pose dropPose1 = new Pose(24.7, 23, Math.toRadians(180));
+    private final Pose dropPose1 = new Pose(15.531291611185088, 8.238615179760312, Math.toRadians(0));
 
-    private final Pose dropPose2 = new Pose(24.7, 12, Math.toRadians(180));
+    private final Pose dropPose2 = new Pose(15.531291611185088, 15.531291611185091, Math.toRadians(0));
 
-    private final Pose dropPose3 = new Pose(24.7, 21, Math.toRadians(136));
+    private final Pose dropPose3 = new Pose(15.531291611185088, 21, Math.toRadians(0));
 
     /** Park Pose for our robot, after we do all of the scoring. */
     private final Pose parkPose = new Pose(13.230359520639148, 15.723035952063917, Math.toRadians(0));
+
+    private final Pose grabSpec = new Pose(13.854194407456724, 21, Math.toRadians(0)); // y was 129.55 before
+
 
     /** Park Control Pose for our robot, this is used to manipulate the bezier curve that we will create for the parking.
      * The Robot will not go to this pose, it is used a control point for our bezier curve. */
@@ -200,7 +203,7 @@ public class specimenAuto extends OpMode {
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    private Path scorePreload, park, scoreSub, backSub, dropGrab;
+    private Path scorePreload, park, scoreSub, backSub, dropGrab, scoreObservation, grabObservation, moveObservation;
     private Path grabPickup1, grabPickup2, grabPickup3, dropPickup1, dropPickup2, dropPickup3;
 
     //private PathChain[] grabPaths = {grabPickup1, grabPickup2, grabPickup3};
@@ -263,6 +266,16 @@ public class specimenAuto extends OpMode {
         dropPickup3.setLinearHeadingInterpolation(pickup3Pose.getHeading(), dropPose3.getHeading());
 
 
+        scoreObservation = new Path(new BezierLine(new Point(grabSpec), new Point(scorePose)));
+        scoreObservation.setLinearHeadingInterpolation(grabSpec.getHeading(), scorePose.getHeading());
+
+        grabObservation = new Path(new BezierLine(new Point(scorePose), new Point(grabSpec)));
+        grabObservation.setLinearHeadingInterpolation(scorePose.getHeading(), grabSpec.getHeading());
+
+        moveObservation = new Path(new BezierLine(new Point(dropPose3), new Point(grabSpec)));
+        moveObservation.setLinearHeadingInterpolation(dropPose3.getHeading(), grabSpec.getHeading());
+
+
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
         park = new Path(new BezierCurve(new Point(scorePose), /* Control Point */ new Point(parkControlPose), new Point(parkPose)));
         park.setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading());
@@ -293,10 +306,10 @@ public class specimenAuto extends OpMode {
                 //region Bring Lift Up and Extendo Out as we move
                 extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
 
-                liftControllerRight.setTargetPosition(1150, 1, "Ticks", verticalLiftValue);
+                liftControllerRight.setTargetPosition(1100, 1, "Ticks", verticalLiftValue);
                 verticalLeft.setPower(verticalRight.getPower());
 
-                if (!follower.isBusy() && Math.abs(verticalLiftValue - 1200) < 50) {
+                if (!follower.isBusy() && Math.abs(verticalLiftValue - 1100) < 75) {
                     setPathState(2);
                     numberScored++;
 
@@ -527,7 +540,7 @@ public class specimenAuto extends OpMode {
                     verticalLeft.setPower(0);
 
                     if (intakeInTransferPosition(wristServoController)) {
-                        if (horizontalLiftValue > 25) { // 10 BEFORE CHANGE
+                        if (!magHorOn) { // 10 BEFORE CHANGE
                             horizontalDrive.setPower(-1);
                         } else {
                             horizontalDrive.setPower(0);
@@ -544,6 +557,7 @@ public class specimenAuto extends OpMode {
                 break;
                 //endregion
             case 8:
+                //region Go to Transfer
                 if (Math.abs(horizontalLiftValue - 550) > 25 && !intakeInTransferPosition(wristServoController)) {
                     extendoController.setTargetPosition(550, 1, "Ticks", horizontalLiftValue);
                 }
@@ -564,7 +578,7 @@ public class specimenAuto extends OpMode {
                     verticalLeft.setPower(0);
 
                     if (intakeInTransferPosition(wristServoController)) {
-                        if (horizontalLiftValue > 25) { // 10 BEFORE CHANGE
+                        if (!magHorOn) { // 10 BEFORE CHANGE
                             horizontalDrive.setPower(-1);
                         } else {
                             horizontalDrive.setPower(0);
@@ -574,7 +588,9 @@ public class specimenAuto extends OpMode {
                     }
                 }
                 break;
+                //endregion
             case 9:
+                //region Close Depos Claw
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.1)) {
                     break;
                 }
@@ -583,7 +599,9 @@ public class specimenAuto extends OpMode {
                 setPathState(10);
                 timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 break;
+                //endregion
             case 10:
+                //region Open Intake Claw
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) {
                         deposClawState = true;
@@ -595,13 +613,17 @@ public class specimenAuto extends OpMode {
                 setPathState(11);
                 timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 break;
+                //endregion
             case 11:
-                extendoController.setTargetPosition(1100, 1, "Ticks", horizontalLiftValue);
+                //region Drop and Extendo Out
+                extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+
+                intakeState = false;
 
                 intakeRotateState = false;
 
                 deposArmState = true;
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.35)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.35) || follower.isBusy()) {
                     break;
                 }
 
@@ -609,13 +631,8 @@ public class specimenAuto extends OpMode {
 
                 setPathState(12);
                 break;
+                //endregion
             case 12:
-                break;
-            case 100:
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) { // 0.3 before CHANGED
-                    break;
-                }
-
                 switch (numberScored) {
                     case 1:
                         follower.followPath(grabPickup1, true);
@@ -632,10 +649,36 @@ public class specimenAuto extends OpMode {
                 }
                 numberScored++;
 
-                setPathState(101);
+                setPathState(13);
                 break;
-            case 101:
-                if (follower.isBusy()) { // 0.3 before CHANGED
+            case 13:
+                if (follower.isBusy()) {
+                    extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+                    break;
+                }
+
+                deposClawState = true;
+
+                if (numberScored == 4) {
+                    double angle = 40;
+                    double calculatedPosition = 1 - (0.00337777 * angle);
+
+                    intakeRotateOverride = true;
+                    intakeRotate.setPosition(calculatedPosition);
+                }
+
+                grabTimer = runtime.seconds();
+                intakeClawState = false;
+                grabbing = true;
+
+                setPathState(14);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                break;
+            case 14:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.8) || grabbing) {
+                    if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.4)) {
+                        deposArmState = false;
+                    }
                     break;
                 }
 
@@ -651,41 +694,98 @@ public class specimenAuto extends OpMode {
                         break;
                 }
 
-                setPathState(102);
+                setPathState(15);
                 break;
-            case 102:
+            case 15:
+                if (Math.abs(horizontalLiftValue - 550) > 25 && !intakeInTransferPosition(wristServoController)) {
+                    extendoController.setTargetPosition(550, 1, "Ticks", horizontalLiftValue);
+                }
+
+
+                intakeState = true;
+                intakeRotateState = false;
+                intakeClawState = true;
+                deposClawState = false;
+
+
+                if (verticalLiftValue > 25) {
+                    verticalRight.setPower(-1);
+                    verticalLeft.setPower(-1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+
+                    if (intakeInTransferPosition(wristServoController)) {
+                        if (horizontalLiftValue > 0) { // 10 BEFORE CHANGE
+                            horizontalDrive.setPower(-1);
+                        } else {
+                            horizontalDrive.setPower(0);
+                            setPathState(16);
+                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                        }
+                    }
+                }
+                break;
+            case 16:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.1)) {
+                    break;
+                }
+
+                deposClawState = true;
+                setPathState(17);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                break;
+            case 17:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) {
+                        deposClawState = true;
+                        intakeClawState = false;
+                    }
+                    break;
+                }
+
+                setPathState(18);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                break;
+            case 18:
+                if (numberScored != 4) {
+                    extendoController.setTargetPosition(1200, 1, "Ticks", horizontalLiftValue);
+                } else {
+                    extendoController.setTargetPosition(150, 1, "Ticks", horizontalLiftValue);
+                }
+
+                intakeState = false;
+
+                intakeRotateState = false;
+
+                deposArmState = true;
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.35) || follower.isBusy()) {
+                    break;
+                }
+
+                deposClawState = false;
+
+                if (numberScored == 4) {
+                    numberScored = 1;
+                    deposArmState = true;
+
+                    follower.followPath(moveObservation, true);
+                    setPathState(19);
+                    break;
+                } else {
+                    setPathState(12);
+                }
+                break;
+            case 19:
+                deposClawState = false;
+
                 if (follower.isBusy()) {
                     break;
                 }
 
-                setPathState(100);
+                scoreState = "Specimen";
                 break;
             case 999:
-                switch (liftstate) {
-                    case "up":
-                        if (verticalRight.getCurrentPosition() < 1900) {
-                            liftControllerRight.setTargetPosition(2000, 1, "Ticks", verticalLiftValue);
-                            verticalLeft.setPower(verticalRight.getPower());
-                        } else {
-                            liftstate = "down";
-                            verticalLeft.setPower(0);
-                            verticalRight.setPower(0);
-                        }
-                        break;
-                    case "down":
-                        if (verticalRight.getCurrentPosition() > 25) {
-                            liftControllerRight.setTargetPosition(0, 1, "Ticks", verticalLiftValue);
-                            verticalLeft.setPower(verticalRight.getPower());
-                        } else {
-                            liftstate = "up";
-                            verticalLeft.setPower(0);
-                            verticalRight.setPower(0);
-                        }
-                        break;
-                }
-
-                telemetry.addData("veritcal right pos", verticalRight.getCurrentPosition());
-                telemetry.addData("veritcal left pos", verticalLeft.getCurrentPosition());
                 break;
             case 1000:
                 break;
@@ -1022,10 +1122,10 @@ public class specimenAuto extends OpMode {
                 arm.setPosition(0.3);
                 break;
             case "Depos": // Equal to transfer position
-                arm.setPosition(0.725);
+                arm.setPosition(0.78);
                 break;
             case "Specimen":
-                arm.setPosition(0.78);
+                arm.setPosition(0.815);
                 break;
         }
     }

@@ -176,13 +176,13 @@ public class specimenAuto extends OpMode {
     private final Pose behindSub = new Pose(27.23, 70, Math.toRadians(0)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(22.531291611185088, 18.934087882822908, Math.toRadians(0)); //x was 33.3 before
+    private final Pose pickup1Pose = new Pose(23.531291611185088, 18.934087882822908, Math.toRadians(0)); //x was 33.3 before
 
     /** Middle (Second) Sample from the Spike Mark */
-    private final Pose pickup2Pose = new Pose(22.53897470039947, 8.238615179760312, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(23.53897470039947, 8.238615179760312, Math.toRadians(0));
 
     /** Highest (Third) Sample from the Spike Mark */
-    private final Pose pickup3Pose = new Pose(26.819906790945407, 15.531291611185091, Math.toRadians(-50)); // y was 129.55 before
+    private final Pose pickup3Pose = new Pose(28.819906790945407, 15.031291611185091, Math.toRadians(-50)); // y was 129.55 before
 
     private final Pose dropPose1 = new Pose(15.531291611185088, 8.238615179760312, Math.toRadians(0));
 
@@ -193,7 +193,7 @@ public class specimenAuto extends OpMode {
     /** Park Pose for our robot, after we do all of the scoring. */
     private final Pose parkPose = new Pose(13.230359520639148, 15.723035952063917, Math.toRadians(0));
 
-    private final Pose grabSpec = new Pose(13.854194407456724, 21, Math.toRadians(0)); // y was 129.55 before
+    private final Pose grabSpec = new Pose(10.5, 21, Math.toRadians(0)); // y was 129.55 before
 
 
     /** Park Control Pose for our robot, this is used to manipulate the bezier curve that we will create for the parking.
@@ -309,6 +309,10 @@ public class specimenAuto extends OpMode {
                 liftControllerRight.setTargetPosition(1100, 1, "Ticks", verticalLiftValue);
                 verticalLeft.setPower(verticalRight.getPower());
 
+                if (verticalLiftValue > 550) {
+                    deposClawState = false;
+                }
+
                 if (!follower.isBusy() && Math.abs(verticalLiftValue - 1100) < 75) {
                     setPathState(2);
                     numberScored++;
@@ -321,9 +325,7 @@ public class specimenAuto extends OpMode {
                 //region Clip
                 extendoController.setTargetPosition(1150, 1, "Ticks", horizontalLiftValue);
 
-                deposClawState = false;
-
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.30)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.05)) { // 0.3 before CHANGED
                     break;
                 }
 
@@ -602,8 +604,8 @@ public class specimenAuto extends OpMode {
                 //endregion
             case 10:
                 //region Open Intake Claw
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
-                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.1)) {
                         deposClawState = true;
                         intakeClawState = false;
                     }
@@ -623,7 +625,7 @@ public class specimenAuto extends OpMode {
                 intakeRotateState = false;
 
                 deposArmState = true;
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.35) || follower.isBusy()) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25) || follower.isBusy()) {
                     break;
                 }
 
@@ -648,6 +650,8 @@ public class specimenAuto extends OpMode {
                         break;
                 }
                 numberScored++;
+
+                autoIntakeMode = false;
 
                 setPathState(13);
                 break;
@@ -765,6 +769,10 @@ public class specimenAuto extends OpMode {
 
                 deposClawState = false;
 
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 1)) {
+                    break;
+                }
+
                 if (numberScored == 4) {
                     numberScored = 1;
                     deposArmState = true;
@@ -777,13 +785,67 @@ public class specimenAuto extends OpMode {
                 }
                 break;
             case 19:
-                deposClawState = false;
-
                 if (follower.isBusy()) {
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     break;
                 }
 
-                scoreState = "Specimen";
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.1)) {
+                    deposClawState = true;
+                }
+
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) {
+                    setPathState(20);
+                    break;
+                }
+                break;
+            case 20:
+                follower.followPath(scoreObservation, true);
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
+
+                setPathState(21);
+                break;
+            case 21:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.1)) {
+                    deposArmState = false;
+                }
+
+                //region Bring Lift Up As We Move
+                liftControllerRight.setTargetPosition(1100, 1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                if (verticalLiftValue > 550) {
+                    scoreState = "Specimen";
+                    deposClawState = false;
+                }
+
+                if (!follower.isBusy() && Math.abs(verticalLiftValue - 1100) < 75) {
+                    setPathState(22);
+                    numberScored++;
+
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                }
+                break;
+                //endregion
+            case 22:
+                //region Clip
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.05)) { // 0.3 before CHANGED
+                    break;
+                }
+
+                liftControllerRight.setTargetPosition(1700, 1, "Ticks", verticalLiftValue);
+                verticalLeft.setPower(verticalRight.getPower());
+
+                if (Math.abs(verticalLiftValue - 1600) < 50) {
+                    setPathState(23);
+                    scoreState = "Sample";
+
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                    break;
+                }
+                break;
+                //endregion
+            case 23:
                 break;
             case 999:
                 break;
@@ -1122,10 +1184,10 @@ public class specimenAuto extends OpMode {
                 arm.setPosition(0.3);
                 break;
             case "Depos": // Equal to transfer position
-                arm.setPosition(0.78);
+                arm.setPosition(0.81);
                 break;
             case "Specimen":
-                arm.setPosition(0.815);
+                arm.setPosition(0.81);
                 break;
         }
     }

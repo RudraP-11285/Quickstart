@@ -141,12 +141,12 @@ public class deposV3test extends LinearOpMode {
             // Sample Depos 0.725
 
             if (moveExtendo) {deposExtendo.setPosition(extendoPos);}
-            // Retracted 0.36
+            // Retracted 0.36 (0.4 is better)
             // Extended 0.585
 
             if (moveClaw) {deposClaw.setPosition(clawPos);}
-            // Closed 0.71
-            // Open 0.45
+            // Closed 0.71 | 0.66 new
+            // Open 0.45 | 0.45
         }
         //limelight.stop();
     }

@@ -631,18 +631,18 @@ public class teleOP extends LinearOpMode {
             //region Depos Claw Controls
             //if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
             if (scoreState.equals("Sample")) {
-                deposExtendo.setPosition(0.36);
-                if (deposClawState && deposClaw.getPosition() != 1) { deposClaw.setPosition(1); } else if (!deposClawState && deposClaw.getPosition() != 0.45) { deposClaw.setPosition(0.45); }
+                deposExtendo.setPosition(0.41);
+                if (deposClawState && deposClaw.getPosition() != 0.66) { deposClaw.setPosition(0.66); } else if (!deposClawState && deposClaw.getPosition() != 0.45) { deposClaw.setPosition(0.45); }
             } else if (scoreState.equals("Specimen")) {
-                deposClaw.setPosition(1);
+                deposClaw.setPosition(0.66);
                 if (verticalLiftValue > 500) {
-                    if (deposClawState && deposExtendo.getPosition() != 0.36) {
-                        deposExtendo.setPosition(0.36);
+                    if (deposClawState && deposExtendo.getPosition() != 0.41) {
+                        deposExtendo.setPosition(0.41);
                     } else if (!deposClawState && deposExtendo.getPosition() != 0.585) {
                         deposExtendo.setPosition(0.585);
                     }
                 } else {
-                    deposExtendo.setPosition(0.36);
+                    deposExtendo.setPosition(0.38);
                 }
             }
 

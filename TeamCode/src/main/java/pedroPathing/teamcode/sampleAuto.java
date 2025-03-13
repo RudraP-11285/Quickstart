@@ -59,8 +59,8 @@ public class sampleAuto extends OpMode {
 
     // All 3 of the Outtake Servos plugged into Control Hub
     private Servo deposClaw =  null; // Edward
-    private Servo deposLeft =  null; // Stuart
-    private Servo deposRight =  null; // Felicia
+    private Servo deposExtendo =  null; // Stuart
+    private Servo deposArm =  null; // Felicia
 
     private AnalogInput depositEncoder1 = null;
     private AnalogInput depositEncoder2 = null;
@@ -365,7 +365,7 @@ public class sampleAuto extends OpMode {
                 if (numberScored == 3) {
                     intakeRotateState = true;
 
-                    if (horizontalLiftValue < 350) { // 175 before
+                    if (horizontalLiftValue < 100) { // 175 before
                         horizontalDrive.setPower(0.3); // before
                     } else {
                         horizontalDrive.setPower(0);
@@ -389,35 +389,43 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 7: // Go to transfer position
-                if (numberScored != 3) {
-                    if (horizontalLiftValue < 550) {
-                        horizontalDrive.setPower(1);
-                    } else if (horizontalLiftValue > 650) {
-                        horizontalDrive.setPower(-1);
-                    } else {
-                        horizontalDrive.setPower(0);
-                    }
+                if (Math.abs(horizontalLiftValue - 100) > 7 && !intakeInTransferPosition(wristServoController)) {
+                    extendoController.setTargetPosition(100, 1, "Ticks", horizontalLiftValue);
                 }
 
-                intakeState = true;
+
                 intakeRotateState = false;
                 intakeClawState = true;
                 deposArmState = false;
                 deposClawState = false;
 
-                if (verticalLiftValue > 5) {
-                    verticalLeft.setPower(1);
+
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) {
+                    break;
+                }
+
+
+                intakeState = true;
+
+
+                if (verticalLiftValue > 25) {
                     verticalRight.setPower(-1);
+                    verticalLeft.setPower(-1);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
 
                     if (intakeInTransferPosition(wristServoController)) {
-                        if (horizontalLiftValue > 25) { // 10 BEFORE CHANGE
+                        if (!magHorOn) { // 10 BEFORE CHANGE
                             horizontalDrive.setPower(-1);
                         } else {
                             horizontalDrive.setPower(0);
-                            setPathState(8);
+
+                            if (follower.isBusy()) {
+                                break;
+                            }
+
+                            setPathState(9);
                             timeStamp = opmodeTimer.getElapsedTimeSeconds();
                         }
                     }
@@ -487,7 +495,7 @@ public class sampleAuto extends OpMode {
 
 
 
-                if (horizontalLiftValue > 100 && !grabbing) {
+                if (horizontalLiftValue > 25 && !grabbing) {
                     extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
                 }
 
@@ -844,14 +852,18 @@ public class sampleAuto extends OpMode {
         if (deposArmState) {
             switch (scoreState) {
                 case "Sample":
-                    moveDeposTo("Depos", deposLeft, deposRight);
+                    moveDeposTo("Depos", deposArm);
                     break;
                 case "Specimen":
-                    moveDeposTo("Specimen", deposLeft, deposRight);
+                    moveDeposTo("Specimen", deposArm);
                     break;
             }
         } else {
-            moveDeposTo("Transfer", deposLeft, deposRight);
+            if (scoreState.equals("Sample")) {
+                moveDeposTo("Transfer", deposArm);
+            } else {
+                moveDeposTo("Depos Spec", deposArm);
+            }
         }
 
         // These loop the movements of the robot
@@ -894,8 +906,8 @@ public class sampleAuto extends OpMode {
 
         // All 3 output servos
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
-        deposLeft = hardwareMap.get(Servo.class, "deposLeft");
-        deposRight = hardwareMap.get(Servo.class, "deposRight");
+        deposExtendo = hardwareMap.get(Servo.class, "deposExtendo");
+        deposArm = hardwareMap.get(Servo.class, "deposArm");
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -1018,19 +1030,19 @@ public class sampleAuto extends OpMode {
     }
 
 
-    public void moveDeposTo(String state, Servo left, Servo right) {
+    public void moveDeposTo(String state, Servo arm) {
         switch (state) {
             case "Transfer": // Equal to grab position
-                left.setPosition(0.75);
-                right.setPosition(0.25);
+                arm.setPosition(0.235);
+                break;
+            case "Depos Spec":
+                arm.setPosition(0.3);
                 break;
             case "Depos": // Equal to transfer position
-                left.setPosition(0.30);
-                right.setPosition(0.70);
+                arm.setPosition(0.725);
                 break;
             case "Specimen":
-                left.setPosition(0.2);
-                right.setPosition(0.8);
+                arm.setPosition(0.81);
                 break;
         }
     }

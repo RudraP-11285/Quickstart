@@ -1,5 +1,6 @@
 package pedroPathing.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.pathgen.BezierCurve;
@@ -23,8 +24,6 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.util.Objects;
-
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
 
@@ -38,6 +37,7 @@ import pedroPathing.constants.LConstants;
  * @version 2.0, 11/28/2024
  */
 
+@Config
 @Autonomous(name = "! BLUE PINEAPPLE COCONUT", group = "! SUPER Autonomous")
 public class sampleAuto extends OpMode {
     //region Declare Hardware
@@ -143,6 +143,9 @@ public class sampleAuto extends OpMode {
      * It is used by the pathUpdate method. */
     private int pathState;
     private int numberScored = 0;
+    int yOffset = 0;
+    double xOffsetBlock = 0;
+    double horizontalLiftTargetIN = 0;
 
     /* Create and Define Poses + Paths
      * Poses are built with three constructors: x, y, and heading (in Radians).
@@ -157,16 +160,18 @@ public class sampleAuto extends OpMode {
     private final Pose startPose = new Pose(9, 104, Math.toRadians(0));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(15.5, 127.5, Math.toRadians(315)); //13.5, 127.5
+    public static final Pose scorePose = new Pose(13.75, 130.25, Math.toRadians(315)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(31.6, 123.50, Math.toRadians(0)); //x was 33.3 before
+    public static Pose pickup1Pose = new Pose(25.5, 123.15, Math.toRadians(0)); //x was 33.3 before
 
     /** Middle (Second) Sample from the Spike Mark */
-    private final Pose pickup2Pose = new Pose(29.325, 132.25, Math.toRadians(0));
+    public static Pose pickup2Pose = new Pose(25.8, 133, Math.toRadians(0));
 
     /** Highest (Third) Sample from the Spike Mark */
-    private final Pose pickup3Pose = new Pose(41.25,  128.5, Math.toRadians(90)); // y was 129.55 before
+    //public static Pose pickup3Pose = new Pose(27,  128.5, Math.toRadians(135)); // y was 129.55 before
+    private final Pose pickup3Pose = new Pose(31.819906790945407, 144 - 16.031291611185091, Math.toRadians(50)); // y was 129.55 before
+
 
     /** Park Pose for our robot, after we do all of the scoring. */
     private final Pose parkPose = new Pose(66.28286852589642, 102.91235059760957, Math.toRadians(-85));
@@ -215,6 +220,7 @@ public class sampleAuto extends OpMode {
                 .addPath(new BezierLine(new Point(scorePose), new Point(pickup1Pose)))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
                 .build();
+        grabPickup1.getPath(0).setZeroPowerAccelerationMultiplier(2.75);
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup1 = follower.pathBuilder()
@@ -239,6 +245,8 @@ public class sampleAuto extends OpMode {
                 .addPath(new BezierLine(new Point(scorePose), new Point(pickup3Pose)))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
                 .build();
+        grabPickup3.getPath(0).setZeroPowerAccelerationMultiplier(2.75);
+
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup3 = follower.pathBuilder()
@@ -260,6 +268,8 @@ public class sampleAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0: // Initialize and move to score position for preload
+                deposExtendo.setPosition(0.41);
+
                 deposClawState = true;
                 intakeClawState = false;
                 intakeRotateState = false;
@@ -268,27 +278,20 @@ public class sampleAuto extends OpMode {
                     case 0:
                         follower.followPath(scorePreload, true);
                         break;
-                    case 1:
-                        follower.followPath(scorePickup1, true);
-                        break;
-                    case 2:
-                        follower.followPath(scorePickup2, true);
-                        break;
-                    case 3:
-                        follower.followPath(scorePickup3, true);
+                    default:
                         break;
                 }
 
                 setPathState(1);
                 break;
             case 1: // Bring the lift up as we move
-                if (verticalLiftValue < 3500) {
+                if (verticalLiftValue < 2700) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && (!(verticalLiftValue < 2700))) {
+                if(!follower.isBusy() && (!(verticalLiftValue < 2300))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -301,9 +304,9 @@ public class sampleAuto extends OpMode {
             case 2: // Bring up the arm, wait, and drop
                 deposArmState = true;
 
-                if (verticalLiftValue < 3500) {
-                    verticalLeft.setPower(-0.65);
-                    verticalRight.setPower(0.65);
+                if (verticalLiftValue < 2700) {
+                    verticalLeft.setPower(-1);
+                    verticalRight.setPower(1);
                 } else {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -316,32 +319,25 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 3: // Wait for drop, start moving to grab
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.15)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.4)) { // 0.3 before CHANGED
                     break;
                 }
-                deposArmState = false;
+                deposClawState = true;
                 numberScored++;
                 timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                setPathState(4);
-                break;
-            case 4: // Go to the next grab path
-                //follower.followPath(grabPaths[numberScored - 1], true);
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.225)) { // 0.3 before CHANGED
-                    break;
-                }
 
                 switch (numberScored) {
                     case 1:
                         follower.followPath(grabPickup1, true);
-                        setPathState(5);
+                        setPathState(4);
                         break;
                     case 2:
                         follower.followPath(grabPickup2, true);
-                        setPathState(5);
+                        setPathState(4);
                         break;
                     case 3:
                         follower.followPath(grabPickup3, true);
-                        setPathState(5);
+                        setPathState(4);
                         break;
                     case 4:
                         follower.followPath(park, false);
@@ -352,10 +348,20 @@ public class sampleAuto extends OpMode {
                         break;
                 }
                 break;
+            case 4: // Go to the next grab path
+                //follower.followPath(grabPaths[numberScored - 1], true);
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) { // 0.3 before CHANGED
+                    break;
+                }
+
+                deposArmState = false;
+
+                setPathState(5);
+                break;
             case 5: // Bring stuff down, grab when in position
                 if (verticalLiftValue > 5) {
-                    verticalLeft.setPower(0.8);
-                    verticalRight.setPower(-0.8);
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
@@ -364,31 +370,62 @@ public class sampleAuto extends OpMode {
                 intakeState = false;
                 if (numberScored == 3) {
                     intakeRotateState = true;
-
-                    if (horizontalLiftValue < 100) { // 175 before
-                        horizontalDrive.setPower(0.3); // before
-                    } else {
-                        horizontalDrive.setPower(0);
-                    }
+                    extendoController.setTargetPosition(250, 1, "Ticks", horizontalLiftValue);
+                } else {
+                    extendoController.setTargetPosition(235, 1, "Ticks", horizontalLiftValue);
                 }
 
-                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 34) < 4) {
-                    grabbing = true;
-                    grabTimer = runtime.seconds();
-                    setPathState(6);
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
 
-                    verticalLeft.setPower(0);
-                    verticalRight.setPower(0);
+                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 34) < 4) {
+                    if (numberScored == 3 && Math.abs(horizontalLiftValue - 250) < 10) {
+                        grabbing = true;
+                        grabTimer = runtime.seconds();
+                        setPathState(6);
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
+
+                        double angle = 130;
+                        double calculatedPosition = 1 - (0.00337777 * angle);
+
+                        intakeRotateOverride = true;
+                        intakeClawState = false;
+
+                        intakeRotate.setPosition(calculatedPosition);
+
+                        verticalLeft.setPower(0);
+                        verticalRight.setPower(0);
+                    } else if (Math.abs(horizontalLiftValue - 235) < 10) {
+                        grabbing = true;
+                        grabTimer = runtime.seconds();
+                        setPathState(6);
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
+
+                        verticalLeft.setPower(0);
+                        verticalRight.setPower(0);
+                    }
                 }
                 break;
             case 6: // Wait for grab to complete
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.2)) { // 0.5 before CHANGED //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.6)) { // 0.5 before CHANGED //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     setPathState(7);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 7: // Go to transfer position
+            case 7:
+                switch (numberScored) {
+                    case 1:
+                        follower.followPath(scorePickup1, true);
+                        break;
+                    case 2:
+                        follower.followPath(scorePickup2, true);
+                        break;
+                    case 3:
+                        follower.followPath(scorePickup3, true);
+                        break;
+                }
+
+                setPathState(8);
+                break;
+            case 8: // Go to transfer position
                 if (Math.abs(horizontalLiftValue - 100) > 7 && !intakeInTransferPosition(wristServoController)) {
                     extendoController.setTargetPosition(100, 1, "Ticks", horizontalLiftValue);
                 }
@@ -410,7 +447,7 @@ public class sampleAuto extends OpMode {
 
                 if (verticalLiftValue > 25) {
                     verticalRight.setPower(-1);
-                    verticalLeft.setPower(-1);
+                    verticalLeft.setPower(1);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
@@ -431,18 +468,21 @@ public class sampleAuto extends OpMode {
                     }
                 }
                 break;
-            case 8:
+            case 9:
                 // transfer
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.05)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = true;
-                    setPathState(9);
+                    setPathState(10);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 9:
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.075)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
-                    setPathState(0);
-                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+            case 10:
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.3)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                    intakeClawState = false;
+                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) {
+                        setPathState(0);
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                    }
                 }
                 break;
             case 101:
@@ -454,7 +494,7 @@ public class sampleAuto extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
-                if (horizontalLiftValue < 1200) {
+                if (horizontalLiftValue < 380) {
                     horizontalDrive.setPower(0.5);
                 } else {
                     horizontalDrive.setPower(0);
@@ -462,241 +502,254 @@ public class sampleAuto extends OpMode {
                 intakeState = false;
                 autoIntakeMode = true;
 
-                if (!follower.isBusy() && !(horizontalLiftValue < 1200) && !(verticalLiftValue >= 15)) {
+                if (!follower.isBusy() && !(horizontalLiftValue < 380) && !(verticalLiftValue >= 15)) {
                     setPathState(102);
                 }
                 break;
             case 102:
-                intakeState = false;
-                autoIntakeMode = true;
-
-                LLResult cameraResult = limelight.getLatestResult();
-                double[] pythonOutputs = cameraResult.getPythonOutput();
-
-                double yellowXoffset = pythonOutputs[8];
-                double yellowXoffsetIN = yellowXoffset/120;
-                double yellowYoffset = pythonOutputs[9];
-                double yellowYoffsetIN = yellowYoffset/120;
-
-                double blueXoffset = pythonOutputs[1];
-                double blueXoffsetIN = blueXoffset/120;
-                double blueYoffset = pythonOutputs[2];
-                double blueYoffsetIN = blueYoffset/120;
-
-                /*
-                if ((int) yellowYoffsetIN != 0) {
-                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + yellowYoffsetIN, 1, "Inches", horizontalLiftValue);
-                } else if ((int) blueYoffsetIN != 0) {
-                    extendoController.setTargetPosition(extendoController.getCurrentPosition("Inches") + blueYoffsetIN, 1, "Inches", horizontalLiftValue);
-                } else if (horizontalLiftValue > 100 && !grabbing) {
-                    extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
-                }
-                */
-
-
-
-                if (horizontalLiftValue > 25 && !grabbing) {
-                    extendoController.setTargetPosition(25, 0.25, "Ticks", horizontalLiftValue);
+                if (follower.isBusy() || opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.25)) { // 0.3 before CHANGED
+                    extendoController.setTargetPosition(380 - yOffset, 1, "Ticks", horizontalLiftValue);
+                    telemetry.addData("WAITING", "");
+                    break;
                 }
 
-
-                telemetry.addData("Yellow X Offset", yellowXoffset);
-                telemetry.addData("Yellow Y Offset", yellowYoffset);
-                telemetry.addData("Blue X Offset", blueXoffset);
-                telemetry.addData("Blue Y Offset", blueYoffset);
-
-                if (opmodeTimer.getElapsedTimeSeconds() > grabTimer + 0.45) {
-                    if (!grabbing && (pythonOutputs[7] > 0.5) && (Math.abs(pythonOutputs[9]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
-                        horizontalDrive.setPower(0);
-
-                        if (Math.abs(pythonOutputs[8]) < 40) {
-                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                            grabTimer = runtime.seconds();
-                            intakeRotateOverride = true;
-                            //intakeClawState = true;
-                            grabbing = true;
-
-                            leftFrontDrive.setPower(0);
-                            rightFrontDrive.setPower(0);
-                            leftBackDrive.setPower(0);
-                            rightBackDrive.setPower(0);
-
-                            double angle = pythonOutputs[10];
-                            double calculatedPosition = 1 - (0.00337777 * angle);
-
-                            intakeRotate.setPosition(calculatedPosition);
-                        } else {
-                            if (pythonOutputs[8] < 0) {
-                                double lateral = -0.25;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            } else {
-                                double lateral = 0.25;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            }
-                        }
-                    }
-                    else if (!grabbing && (pythonOutputs[0] > 0.5) && (Math.abs(pythonOutputs[2]) < 45) && !intakeClawState && !grabbing && (!intakeClawDebounce)) {
-                        horizontalDrive.setPower(0);
-
-                        if (Math.abs(pythonOutputs[1]) < 40) {
-                            timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                            grabTimer = runtime.seconds();
-                            intakeRotateOverride = true;
-                            //intakeClawState = true;
-                            grabbing = true;
-
-                            leftFrontDrive.setPower(0);
-                            rightFrontDrive.setPower(0);
-                            leftBackDrive.setPower(0);
-                            rightBackDrive.setPower(0);
-
-                            double angle = pythonOutputs[3];
-                            double calculatedPosition = 1 - (0.00337777 * angle);
-
-                            intakeRotate.setPosition(calculatedPosition);
-                        } else {
-                            if (pythonOutputs[1] < 0) {
-                                double lateral = -0.25;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            } else {
-                                double lateral = 0.25;
-
-                                double leftFrontPower = +lateral * 1.125;
-                                double rightFrontPower = -lateral * 1.125;
-                                double leftBackPower = -lateral;
-                                double rightBackPower = +lateral;
-
-                                leftFrontDrive.setPower(leftFrontPower);
-                                rightFrontDrive.setPower(rightFrontPower);
-                                leftBackDrive.setPower(leftBackPower);
-                                rightBackDrive.setPower(rightBackPower);
-                            }
-                        }
-                    }
-                }
-
-                if (intakeClawState && opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.65)) {
-                    float bluePercent = (float) colorSensor.blue() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-                    float redPercent = (float) colorSensor.red() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-                    float greenPercent = (float) colorSensor.green() / (colorSensor.blue() + colorSensor.red() + colorSensor.green());
-
-                    if (bluePercent > 0.40) {
-                        telemetry.addData("Blue Detected with", bluePercent);
-                    } else if (redPercent > 0.35 && greenPercent > 0.35) {
-                        telemetry.addData("Yellow Detected with", greenPercent);
-                    } else if (redPercent > 0.40) {
-                        telemetry.addData("Red Detected with", redPercent);
-                    } else {
-                        intakeClawState = false;
-                        intakeRotateState = false;
-                    }
-
-                    if (intakeClawState) {
-                        scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), new Point(parkScoreControlPose), new Point(scorePose)));
-                        scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
-
-                        // SUBMERSIBLE GRAB
-                        setPathState(103);
-                        //follower.followPath(scoreSub, false);
-                        //setPathState(9999);
-
-                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                    }
-                }
-                break;
-            case 103: // Go to transfer position
-                if (numberScored != 3) {
-                    if (horizontalLiftValue < 550) {
-                        horizontalDrive.setPower(1);
-                    } else if (horizontalLiftValue > 650) {
-                        horizontalDrive.setPower(-1);
-                    } else {
-                        horizontalDrive.setPower(0);
-                    }
-                }
-
-                intakeState = true;
-                intakeRotateState = false;
-                intakeClawState = true;
-                deposArmState = false;
-                deposClawState = false;
-
-                if (verticalLiftValue > 5) {
+                if (verticalLiftValue >= 15) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
                     verticalRight.setPower(0);
                     verticalLeft.setPower(0);
+                }
+
+                intakeState = false;
+                autoIntakeMode = true;
+                deposArmState = false;
+
+                LLResult cameraResult = limelight.getLatestResult();
+                double[] pythonOutputs = cameraResult.getPythonOutput();
+
+                if (pythonOutputs[7] > 0.1) {
+                    double yellowXoffset = pythonOutputs[8];
+                    double yellowXoffsetIN = yellowXoffset/120;
+                    double yellowYoffset = pythonOutputs[9];
+                    double yellowYoffsetIN = yellowYoffset/120;
+
+                    telemetry.addData("Horizontal Value", horizontalLiftValue);
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
+                    telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
+
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 1.5;
+                    xOffsetBlock = yellowYoffsetIN;
+
+                    if (2 * yellowXoffsetIN + horizontalLiftTargetIN > 11.2) {
+                        extendoController.setTargetPosition(25 / 2.642611684, 0.25, "Ticks", horizontalLiftValue);
+                        telemetry.addData("TOO FAR!", horizontalLiftValue);
+                    } else {
+                        setPathState(103);
+                        break;
+                    }
+                } else {
+                    extendoController.setTargetPosition(25 / 2.642611684, 0.25, "Ticks", horizontalLiftValue);
+
+                    telemetry.addData("WE SEE NOTHING", horizontalLiftValue);
+                }
+
+                break;
+            case 103:
+                if (follower.isBusy()) {
+                    break;
+                }
+
+                if (verticalLiftValue >= 15) {
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+                }
+
+                double posIN = extendoController.getCurrentPosition("Inches");
+
+                telemetry.addData("Position Inches", posIN);
+                telemetry.addData("Target Position", horizontalLiftTargetIN);
+
+                extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
+
+                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.4) {
+                    horizontalDrive.setPower(0);
+                    telemetry.addData("Matching", "Positions");
+                    timeStamp = opmodeTimer.getElapsedTimeSeconds();
+
+                    setPathState(104);
+                    break;
+                }
+
+                break;
+            case 104:
+                //region Strafe to Block Position and Grab
+                if (verticalLiftValue >= 15) {
+                    verticalLeft.setPower(1);
+                    verticalRight.setPower(-1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
+                }
+
+                verticalLeft.setPower(verticalRight.getPower());
+
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.33)) { // 0.3 before CHANGED
+                    break;
+                }
+
+                intakeState = false;
+                autoIntakeMode = true;
+
+                cameraResult = limelight.getLatestResult();
+                pythonOutputs = cameraResult.getPythonOutput();
+
+                if (pythonOutputs[7] > 0.1) {
+                    double yellowXoffset = pythonOutputs[8];
+                    double yellowXoffsetIN = yellowXoffset/120;
+                    double yellowYoffset = pythonOutputs[9];
+                    double yellowYoffsetIN = yellowYoffset/120;
+
+                    telemetry.addData("Horizontal Value", horizontalLiftValue);
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
+                    telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
+
+                    if (pythonOutputs[7] < 0) {
+                        double lateral = -0.375;
+
+                        double leftFrontPower = +lateral * 1.15;
+                        double rightFrontPower = -lateral * 1.15;
+                        double leftBackPower = -lateral;
+                        double rightBackPower = +lateral;
+
+                        leftFrontDrive.setPower(leftFrontPower);
+                        rightFrontDrive.setPower(rightFrontPower);
+                        leftBackDrive.setPower(leftBackPower);
+                        rightBackDrive.setPower(rightBackPower);
+                    } else {
+                        double lateral = 0.375;
+
+                        double leftFrontPower = +lateral * 1.15;
+                        double rightFrontPower = -lateral * 1.15;
+                        double leftBackPower = -lateral;
+                        double rightBackPower = +lateral;
+
+                        leftFrontDrive.setPower(leftFrontPower);
+                        rightFrontDrive.setPower(rightFrontPower);
+                        leftBackDrive.setPower(leftBackPower);
+                        rightBackDrive.setPower(rightBackPower);
+                    }
+
+                    if (Math.abs(pythonOutputs[7]) < 55) {
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
+                        setPathState(105);
+
+                        double angle = pythonOutputs[10];
+                        double calculatedPosition = 1 - (0.00337777 * angle);
+
+                        grabTimer = runtime.seconds();
+                        intakeRotateOverride = true;
+                        intakeClawState = false;
+                        grabbing = true;
+
+                        intakeRotate.setPosition(calculatedPosition);
+                        break;
+                    }
+                    break;
+                } else {
+                    leftFrontDrive.setPower(0);
+                    rightFrontDrive.setPower(0);
+                    leftBackDrive.setPower(0);
+                    rightBackDrive.setPower(0);
+
+                    telemetry.addData("WE SEE NOTHING", horizontalLiftValue);
+                }
+
+                break;
+            //endregion
+            case 105: // Go to transfer position
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.85)) {
+                    break;
+                }
+
+                if (Math.abs(horizontalLiftValue - 100) > 7 && !intakeInTransferPosition(wristServoController)) {
+                    extendoController.setTargetPosition(100, 1, "Ticks", horizontalLiftValue);
+                }
+
+
+                intakeRotateState = false;
+                intakeClawState = true;
+                deposArmState = false;
+                deposClawState = false;
+
+
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) {
+                    break;
+                }
+
+
+                intakeState = true;
+
+
+                if (verticalLiftValue > 25) {
+                    verticalRight.setPower(-1);
+                    verticalLeft.setPower(1);
+                } else {
+                    verticalRight.setPower(0);
+                    verticalLeft.setPower(0);
 
                     if (intakeInTransferPosition(wristServoController)) {
-                        if (horizontalLiftValue > 10) {
+                        if (!magHorOn) { // 10 BEFORE CHANGE
                             horizontalDrive.setPower(-1);
                         } else {
                             horizontalDrive.setPower(0);
-                            setPathState(104);
+
+                            if (follower.isBusy()) {
+                                break;
+                            }
+
+                            setPathState(106);
                             timeStamp = opmodeTimer.getElapsedTimeSeconds();
                         }
                     }
                 }
                 break;
-            case 104:
+            case 106:
                 // transfer
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.05)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = true;
-                    setPathState(105);
+                    setPathState(107);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 105:
+            case 107:
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.075)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
-                    setPathState(106);
+                    setPathState(108);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 106:
+            case 108:
                 deposClawState = true;
                 intakeClawState = false;
                 intakeRotateState = false;
 
-                /*
+
                 scoreSub = new Path(new BezierCurve(new Point(follower.getPose()), new Point(parkScoreControlPose), new Point(scorePose)));
                 scoreSub.setLinearHeadingInterpolation(parkPose.getHeading(), scorePose.getHeading());
 
                 follower.followPath(scoreSub, false);
-                 */
 
-                setPathState(107);
+
+                setPathState(109);
                 break;
-            case 107:
+            case 109:
 
-                if (verticalLiftValue < 3500) {
+                if (verticalLiftValue < 2800) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
@@ -714,15 +767,15 @@ public class sampleAuto extends OpMode {
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    setPathState(108);
+                    setPathState(110);
 
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 108:
+            case 110:
                 deposArmState = true;
 
-                if (verticalLiftValue < 3500) {
+                if (verticalLiftValue < 2800) {
                     verticalLeft.setPower(-0.65);
                     verticalRight.setPower(0.65);
                 } else {
@@ -736,20 +789,20 @@ public class sampleAuto extends OpMode {
 
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
-                    setPathState(109);
+                    setPathState(111);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
-            case 109:
+            case 111:
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.15)) { // 0.3 before CHANGED
                     break;
                 }
                 deposArmState = false;
                 numberScored++;
                 timeStamp = opmodeTimer.getElapsedTimeSeconds();
-                setPathState(110);
+                setPathState(112);
                 break;
-            case 110:
+            case 112:
                 break;
         }
     }
@@ -800,7 +853,7 @@ public class sampleAuto extends OpMode {
                 }
             }
         } else {
-            deposArmState = true;
+            //deposArmState = true;
             if (!grabbing) {
                 moveWristTo("Open", intakeWrist);
             } else {
@@ -957,7 +1010,7 @@ public class sampleAuto extends OpMode {
         //endregion
         horizontalDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        extendoController = new MotorPIDController(horizontalDrive, 0.015, 0, 0.0003, 0.1, (double) (700 / 180), 537.6, 4.941);
+        extendoController = new MotorPIDController(horizontalDrive, 0.011, 0, 0.000475, 0.1, (double) (700 / 180), 145.5, 4.941);
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
@@ -978,8 +1031,8 @@ public class sampleAuto extends OpMode {
     public void start() {
         opmodeTimer.resetTimer();
         // These lines for SUBMERSIBLE GRAB
-        setPathState(102);
-        //setPathState(0);
+        //setPathState(102);
+        setPathState(0);
     }
 
     /** We do not use this because everything should automatically disable **/
@@ -1039,7 +1092,7 @@ public class sampleAuto extends OpMode {
                 arm.setPosition(0.3);
                 break;
             case "Depos": // Equal to transfer position
-                arm.setPosition(0.725);
+                arm.setPosition(0.78);
                 break;
             case "Specimen":
                 arm.setPosition(0.81);

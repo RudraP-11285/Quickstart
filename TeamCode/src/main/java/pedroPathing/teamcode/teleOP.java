@@ -373,7 +373,7 @@ public class teleOP extends LinearOpMode {
             //region Return to Transfer
             // Bring everything back to the transfer position
             if (gamepad2.b) { // && verticalLiftValue > 60
-                if (horizontalDrive.getCurrentPosition() < 450 && !intakeInTransferPosition(wristServoController)) {
+                if (horizontalDrive.getCurrentPosition() < 150 && !intakeInTransferPosition(wristServoController)) {
                     outDrivePower = 1;
                 } else {
                     intakeState = true;
@@ -383,16 +383,12 @@ public class teleOP extends LinearOpMode {
 
                     outDrivePower = 0;
 
-                    if (horizontalDrive.getCurrentPosition() > 450) {
+                    if (horizontalDrive.getCurrentPosition() > 150) {
                         outDrivePower = -1;
                     }
 
                     if (verticalLiftValue > 50) {
-                        if (verticalLiftValue > 450) {
-                            upDrivePower = -1;
-                        } else {
-                            upDrivePower = -0.75;
-                        }
+                        upDrivePower = -1;
                         //intakeWaitToReturn = true;
                     } else {
                         upDrivePower = 0;
@@ -420,7 +416,7 @@ public class teleOP extends LinearOpMode {
                     }
                 }
             } else {
-                deposArmState = true;
+                //deposArmState = true;
 
                 if (!grabbing) {
                     moveWristTo("Open", intakeWrist);
@@ -875,7 +871,7 @@ public class teleOP extends LinearOpMode {
                 }
                 break;
             case "Close": // Equal to transfer position
-                wrist.setPosition(0.15);
+                wrist.setPosition(0.25); // testing, 0.15 original
                 break;
             case "Grab":
                 wrist.setPosition(0.69);
@@ -887,7 +883,7 @@ public class teleOP extends LinearOpMode {
     public void moveDeposTo(String state, Servo arm) {
         switch (state) {
             case "Transfer": // Equal to grab position
-                arm.setPosition(0.25);
+                arm.setPosition(0.235);
                 break;
             case "Depos": // Equal to transfer position
                 arm.setPosition(0.725);

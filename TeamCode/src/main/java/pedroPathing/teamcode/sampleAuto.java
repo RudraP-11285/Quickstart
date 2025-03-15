@@ -323,7 +323,7 @@ public class sampleAuto extends OpMode {
                     verticalRight.setPower(0);
                 }
 
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.125)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.12)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
                     setPathState(3);
                     intakeState = false;
@@ -494,6 +494,12 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 101:
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) { // 0.3 before CHANGED
+                    break;
+                }
+
+                deposArmState = false;
+
                 if (verticalLiftValue >= 3) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
@@ -1103,7 +1109,7 @@ public class sampleAuto extends OpMode {
                 arm.setPosition(0.3);
                 break;
             case "Depos": // Equal to transfer position
-                arm.setPosition(0.78);
+                arm.setPosition(0.765);
                 break;
             case "Specimen":
                 arm.setPosition(0.81);

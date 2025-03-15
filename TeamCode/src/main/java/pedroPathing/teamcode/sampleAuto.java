@@ -180,8 +180,8 @@ public class sampleAuto extends OpMode {
 
     /** Park Control Pose for our robot, this is used to manipulate the bezier curve that we will create for the parking.
      * The Robot will not go to this pose, it is used a control point for our bezier curve. */
-    private final Pose parkControlPose = new Pose(75.25091633466136, 139.0836653386454, Math.toRadians(90));
-    private final Pose parkScoreControlPose = new Pose(75.25091633466136, 120.0836653386454, Math.toRadians(90));
+    private final Pose parkControlPose = new Pose(50.812250332889484, 121.75765645805592, Math.toRadians(90));
+    private final Pose parkScoreControlPose = new Pose(50.812250332889484, 121.75765645805592, Math.toRadians(90));
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
@@ -500,6 +500,9 @@ public class sampleAuto extends OpMode {
 
                 deposArmState = false;
 
+                intakeState = false;
+                autoIntakeMode = true;
+
                 if (verticalLiftValue >= 15) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
@@ -508,13 +511,15 @@ public class sampleAuto extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.7)) { // 0.3 before CHANGED
+                    break;
+                }
+
                 if (horizontalLiftValue < 380) {
-                    horizontalDrive.setPower(0.5);
+                    horizontalDrive.setPower(0.75);
                 } else {
                     horizontalDrive.setPower(0);
                 }
-                intakeState = false;
-                autoIntakeMode = true;
 
                 if (!follower.isBusy() && !(horizontalLiftValue < 380) && !(verticalLiftValue >= 15)) {
                     setPathState(102);

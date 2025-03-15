@@ -104,6 +104,9 @@ public class teleOP extends LinearOpMode {
     private Servo deposArm =  null; // Stuart
     private Servo deposExtendo =  null; // Felicia
 
+    private CRServo leftHang =  null;
+    private CRServo rightHang =  null;
+
     private AnalogInput depositEncoder1 = null;
     private AnalogInput depositEncoder2 = null;
 
@@ -187,6 +190,9 @@ public class teleOP extends LinearOpMode {
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
         deposExtendo = hardwareMap.get(Servo.class, "deposExtendo");
         deposArm = hardwareMap.get(Servo.class, "deposArm");
+
+        leftHang = hardwareMap.get(CRServo.class, "leftHang");
+        rightHang = hardwareMap.get(CRServo.class, "rightHang");
 
         // All 3 special servo encoders
         depositEncoder1 = hardwareMap.get(AnalogInput.class, "depositEncoder1");
@@ -294,6 +300,15 @@ public class teleOP extends LinearOpMode {
             }
             //endregion
 
+
+            //region Hang Motors
+            if (!gamepad1.a) {
+                leftHang.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
+            }
+            rightHang.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
+            //endregion
+
+
             //region Magnetic Limit Switches
             boolean magHorOn = !magLimHorizontal1.getState(); // Usually, "false" means pressed
             boolean magVertOn = !magLimVertical1.getState(); // Usually, "false" means pressed
@@ -330,7 +345,7 @@ public class teleOP extends LinearOpMode {
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial   = axialBoost - gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral =  gamepad1.left_stick_x + lateralBoost;
-            double yaw     =  gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger);
+            double yaw     =  gamepad1.right_stick_x;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -687,8 +702,13 @@ public class teleOP extends LinearOpMode {
 
             //region Depos Arm Controls
             if (gamepad2.left_bumper && (!deposArmDebounce)) {
-                deposArmDebounce = true;
-                deposArmState = !deposArmState;
+                if (deposClawState) {
+                    deposArmDebounce = true;
+                    deposArmState = !deposArmState;
+                } else {
+                    deposArmDebounce = true;
+                    deposClawState = true;
+                }
             }
             if (!(gamepad2.left_bumper || gamepad1.y || gamepad2.left_stick_button) && deposArmDebounce) {
                 deposArmDebounce = false;

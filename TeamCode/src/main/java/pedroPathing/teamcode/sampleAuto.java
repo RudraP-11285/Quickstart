@@ -147,6 +147,8 @@ public class sampleAuto extends OpMode {
     double xOffsetBlock = 0;
     double horizontalLiftTargetIN = 0;
 
+    boolean deposWait = false;
+
     /* Create and Define Poses + Paths
      * Poses are built with three constructors: x, y, and heading (in Radians).
      * Pedro uses 0 - 144 for x and y, with 0, 0 being on the bottom left.
@@ -163,10 +165,10 @@ public class sampleAuto extends OpMode {
     public static final Pose scorePose = new Pose(13.75, 130.25, Math.toRadians(315)); //13.5, 127.5
 
     /** Lowest (First) Sample from the Spike Mark */
-    public static Pose pickup1Pose = new Pose(25.5, 123.15, Math.toRadians(0)); //x was 33.3 before
+    public static Pose pickup1Pose = new Pose(25.5, 122.9, Math.toRadians(0)); //x was 33.3 before
 
     /** Middle (Second) Sample from the Spike Mark */
-    public static Pose pickup2Pose = new Pose(25.8, 133, Math.toRadians(0));
+    public static Pose pickup2Pose = new Pose(25.8, 132.9, Math.toRadians(0));
 
     /** Highest (Third) Sample from the Spike Mark */
     //public static Pose pickup3Pose = new Pose(27,  128.5, Math.toRadians(135)); // y was 129.55 before
@@ -273,6 +275,7 @@ public class sampleAuto extends OpMode {
                 deposClawState = true;
                 intakeClawState = false;
                 intakeRotateState = false;
+                deposWait = false;
 
                 switch (numberScored) {
                     case 0:
@@ -282,16 +285,21 @@ public class sampleAuto extends OpMode {
                         break;
                 }
 
+                timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 setPathState(1);
                 break;
             case 1: // Bring the lift up as we move
-                if (verticalLiftValue < 2700) {
+                if (verticalLiftValue < 950) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
 
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.05)) { // 0.3 before CHANGED
+                    deposWait = true;
+                }
+
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && (!(verticalLiftValue < 2300))) {
+                if(!follower.isBusy() && (!(verticalLiftValue < 900))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -302,9 +310,10 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 2: // Bring up the arm, wait, and drop
+                deposWait = false;
                 deposArmState = true;
 
-                if (verticalLiftValue < 2700) {
+                if (verticalLiftValue < 950) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 } else {
@@ -312,14 +321,14 @@ public class sampleAuto extends OpMode {
                     verticalRight.setPower(0);
                 }
 
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.2)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
                     setPathState(3);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
                 break;
             case 3: // Wait for drop, start moving to grab
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.4)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.15)) { // 0.3 before CHANGED
                     break;
                 }
                 deposClawState = true;
@@ -405,7 +414,7 @@ public class sampleAuto extends OpMode {
                 }
                 break;
             case 6: // Wait for grab to complete
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.6)) { // 0.5 before CHANGED //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) { // 0.5 before CHANGED //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     setPathState(7);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
                 }
@@ -437,7 +446,7 @@ public class sampleAuto extends OpMode {
                 deposClawState = false;
 
 
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.5)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0)) {
                     break;
                 }
 
@@ -445,7 +454,7 @@ public class sampleAuto extends OpMode {
                 intakeState = true;
 
 
-                if (verticalLiftValue > 25) {
+                if (verticalLiftValue > 3) {
                     verticalRight.setPower(-1);
                     verticalLeft.setPower(1);
                 } else {
@@ -479,14 +488,14 @@ public class sampleAuto extends OpMode {
             case 10:
                 if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.3)) { // 0.3 BEFORE changed //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     intakeClawState = false;
-                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.5)) {
+                    if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.2)) {
                         setPathState(0);
                         timeStamp = opmodeTimer.getElapsedTimeSeconds();
                     }
                 }
                 break;
             case 101:
-                if (verticalLiftValue >= 15) {
+                if (verticalLiftValue >= 3) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
@@ -513,7 +522,7 @@ public class sampleAuto extends OpMode {
                     break;
                 }
 
-                if (verticalLiftValue >= 15) {
+                if (verticalLiftValue >= 3) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
@@ -561,7 +570,7 @@ public class sampleAuto extends OpMode {
                     break;
                 }
 
-                if (verticalLiftValue >= 15) {
+                if (verticalLiftValue >= 3) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
@@ -588,7 +597,7 @@ public class sampleAuto extends OpMode {
                 break;
             case 104:
                 //region Strafe to Block Position and Grab
-                if (verticalLiftValue >= 15) {
+                if (verticalLiftValue >= 3) {
                     verticalLeft.setPower(1);
                     verticalRight.setPower(-1);
                 } else {
@@ -696,7 +705,7 @@ public class sampleAuto extends OpMode {
                 intakeState = true;
 
 
-                if (verticalLiftValue > 25) {
+                if (verticalLiftValue > 3) {
                     verticalRight.setPower(-1);
                     verticalLeft.setPower(1);
                 } else {
@@ -749,7 +758,7 @@ public class sampleAuto extends OpMode {
                 break;
             case 109:
 
-                if (verticalLiftValue < 2800) {
+                if (verticalLiftValue < 950) {
                     verticalLeft.setPower(-1);
                     verticalRight.setPower(1);
                 }
@@ -762,7 +771,7 @@ public class sampleAuto extends OpMode {
                 }
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if((follower.getPose().getX() > (parkPose.getX() - 5) && follower.getPose().getY() > (parkPose.getY() - 5)) && (!(verticalLiftValue < 2700))) {
+                if((follower.getPose().getX() > (parkPose.getX() - 5) && follower.getPose().getY() > (parkPose.getY() - 5)) && (!(verticalLiftValue < 950))) {
                     /* Score Preload */
                     verticalLeft.setPower(0);
                     verticalRight.setPower(0);
@@ -775,7 +784,7 @@ public class sampleAuto extends OpMode {
             case 110:
                 deposArmState = true;
 
-                if (verticalLiftValue < 2800) {
+                if (verticalLiftValue < 950) {
                     verticalLeft.setPower(-0.65);
                     verticalRight.setPower(0.65);
                 } else {
@@ -902,7 +911,9 @@ public class sampleAuto extends OpMode {
 
         if (deposClawState) { deposClaw.setPosition(0.8); } else { deposClaw.setPosition(0.3); }
 
-        if (deposArmState) {
+        if (deposWait) {
+            moveDeposTo("Wait", deposArm);
+        } else if (deposArmState) {
             switch (scoreState) {
                 case "Sample":
                     moveDeposTo("Depos", deposArm);
@@ -1096,6 +1107,9 @@ public class sampleAuto extends OpMode {
                 break;
             case "Specimen":
                 arm.setPosition(0.81);
+                break;
+            case "Wait":
+                arm.setPosition(0.5);
                 break;
         }
     }

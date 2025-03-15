@@ -9,6 +9,8 @@ Expansion Hub:
     Servo:
         0 - deposClaw
         1 - indicator_servo
+        2 - leftHang
+        3 - rightHang
     Analog Input Devices:
         0 - depositEncoder1
         1 - depositEncoder2

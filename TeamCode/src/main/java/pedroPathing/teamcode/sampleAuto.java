@@ -321,7 +321,7 @@ public class sampleAuto extends OpMode {
                     verticalRight.setPower(0);
                 }
 
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.2)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.225)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
                     setPathState(3);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -467,10 +467,6 @@ public class sampleAuto extends OpMode {
                         } else {
                             horizontalDrive.setPower(0);
 
-                            if (follower.isBusy()) {
-                                break;
-                            }
-
                             setPathState(9);
                             timeStamp = opmodeTimer.getElapsedTimeSeconds();
                         }
@@ -479,7 +475,7 @@ public class sampleAuto extends OpMode {
                 break;
             case 9:
                 // transfer
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.05)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.1)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = true;
                     setPathState(10);
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();

@@ -85,7 +85,7 @@ import com.arcrobotics.ftclib.controller.*;
  */
 
 @Config
-@TeleOp(name="! Depos V3 Testing", group="!! HUZZAH!")
+@TeleOp(name="Depos V3 Testing", group="HUZZAH!")
 public class deposV3test extends LinearOpMode {
 
     //region Declare Hardware

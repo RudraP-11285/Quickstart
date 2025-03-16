@@ -404,7 +404,7 @@ double horizontalZeroValue = 0;
                         //intakeWaitToReturn = false;
 
                         if (!magHorOn && intakeInTransferPosition(wristServoController)) {
-                            extendoController.setTargetPosition(0, 1, "Ticks", horizontalLiftValue);
+                            horizontalDrive.setPower(-1);
                         } else if (horizontalDrive.getCurrentPosition() > 150) {
                             extendoController.setTargetPosition(150, 1, "Ticks", horizontalLiftValue);
                         }
@@ -658,7 +658,7 @@ double horizontalZeroValue = 0;
                 if (deposClawState && deposClaw.getPosition() != 0.66) { deposClaw.setPosition(0.66); } else if (!deposClawState && deposClaw.getPosition() != 0.45) { deposClaw.setPosition(0.45); }
             } else if (scoreState.equals("Specimen")) {
                 deposClaw.setPosition(0.66);
-                if (verticalLiftValue > 500) {
+                if (verticalLiftValue > 150) {
                     if (deposClawState && deposExtendo.getPosition() != 0.41) {
                         deposExtendo.setPosition(0.41);
                     } else if (!deposClawState && deposExtendo.getPosition() != 0.585) {
@@ -673,13 +673,9 @@ double horizontalZeroValue = 0;
                 case "Depos":
                     switch (scoreState) {
                         case "Sample":
-                            if (deposArmDown(deposLeftController)) {
-                                deposClawState = true;
-                            } else {
-                                if (gamepad2.y && (!deposClawDebounce)) {
-                                    deposClawDebounce = true;
-                                    deposClawState = !deposClawState;
-                                }
+                            if (gamepad2.y && (!deposClawDebounce)) {
+                                deposClawState = !deposClawState;
+                                deposClawDebounce = true;
                             }
                             break;
                         case "Specimen":
@@ -759,9 +755,9 @@ double horizontalZeroValue = 0;
 
             if (magVertOn && (upDrivePower < 0)) { // Negate downward movement if limit is active
                 upDrivePower = 0;
-            } else if (scoreState.equals("Sample") && (verticalLiftValue > 3500) && (upDrivePower > 0)) { // Negate upward movement if too high
+            } else if (scoreState.equals("Sample") && (verticalLiftValue > 1050) && (upDrivePower > 0)) { // Negate upward movement if too high
                 upDrivePower = 0;
-            } else if (scoreState.equals("Specimen") && (verticalLiftValue > 1200) && (upDrivePower > 0)) {
+            } else if (scoreState.equals("Specimen") && (verticalLiftValue > 1050) && (upDrivePower > 0)) {
                 upDrivePower = 0;
             }
             //endregion
@@ -885,7 +881,7 @@ double horizontalZeroValue = 0;
                 }
                 break;
             case "Close": // Equal to transfer position
-                wrist.setPosition(0.25); // testing, 0.15 original
+                wrist.setPosition(0.265); // testing, 0.25 original
                 break;
             case "Grab":
                 wrist.setPosition(0.69);
@@ -897,13 +893,13 @@ double horizontalZeroValue = 0;
     public void moveDeposTo(String state, Servo arm) {
         switch (state) {
             case "Transfer": // Equal to grab position
-                arm.setPosition(0.235);
+                arm.setPosition(0.21);
                 break;
             case "Depos": // Equal to transfer position
                 arm.setPosition(0.725);
                 break;
             case "Specimen":
-                arm.setPosition(0.78);
+                arm.setPosition(0.81);
                 break;
         }
     }

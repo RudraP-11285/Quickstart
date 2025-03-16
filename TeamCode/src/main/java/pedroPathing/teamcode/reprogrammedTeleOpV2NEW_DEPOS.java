@@ -72,7 +72,7 @@ import java.util.Arrays;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="! Into the Deep - V2 TeleOp DEPOS v3", group="TeleOp")
+@TeleOp(name="Into the Deep - V2 TeleOp DEPOS v3", group="TeleOp")
 public class reprogrammedTeleOpV2NEW_DEPOS extends LinearOpMode {
 
     //region Declare Hardware

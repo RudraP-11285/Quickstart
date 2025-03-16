@@ -46,7 +46,7 @@ public class extendoPID extends OpMode {
 
     public void loop() {
         extendoController.setPID(p, i, d);
-        int position = horizontalDrive.getCurrentPosition();
+        int position = verticalRight.getCurrentPosition();
         double pid = extendoController.calculate(position, target);
         double ff = Math.cos(Math.toRadians(target)) * f;
 

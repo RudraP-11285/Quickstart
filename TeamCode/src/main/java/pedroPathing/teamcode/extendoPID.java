@@ -25,6 +25,7 @@ public class extendoPID extends OpMode {
     //rotations required to move 1 inch is 1/(pi * wheel diameter)
     private DcMotor horizontalDrive;
     private DcMotor verticalLeft;
+    private DcMotor verticalRight;
     private Servo deposClaw =  null; // Edward
     private Servo deposArm =  null; // Stuart
     private Servo deposExtendo =  null; // Felicia
@@ -35,6 +36,8 @@ public class extendoPID extends OpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         horizontalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+        verticalRight = hardwareMap.get(DcMotor.class, "verticalRight");
+        verticalLeft = hardwareMap.get(DcMotor.class, "verticalLeft");
 
         deposClaw = hardwareMap.get(Servo.class, "deposClaw");
         deposArm = hardwareMap.get(Servo.class, "deposArm");
@@ -49,7 +52,8 @@ public class extendoPID extends OpMode {
 
         double power = pid + ff;
 
-        horizontalDrive.setPower(power);
+        verticalRight.setPower(power);
+        verticalLeft.setPower(-power);
 
         //deposClaw.setPosition(1);
         //deposArm.setPosition(0.25);

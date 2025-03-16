@@ -127,9 +127,8 @@ public class sampleAuto extends OpMode {
 
     double verticalZeroValue = 0;
     double verticalLiftValue = 0;
-
-    double horizontalZeroValue = 0;
     double horizontalLiftValue = 0;
+    double horizontalZeroValue = 0;
     MotorPIDController extendoController;
     //endregion
 
@@ -180,8 +179,8 @@ public class sampleAuto extends OpMode {
 
     /** Park Control Pose for our robot, this is used to manipulate the bezier curve that we will create for the parking.
      * The Robot will not go to this pose, it is used a control point for our bezier curve. */
-    private final Pose parkControlPose = new Pose(50.812250332889484, 121.75765645805592, Math.toRadians(90));
-    private final Pose parkScoreControlPose = new Pose(50.812250332889484, 121.75765645805592, Math.toRadians(90));
+    private final Pose parkControlPose = new Pose(61.16644474034621, 118.11451398135819, Math.toRadians(90));
+    private final Pose parkScoreControlPose = new Pose(39.30758988015978, 109.29427430093209, Math.toRadians(90));
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
@@ -567,7 +566,7 @@ public class sampleAuto extends OpMode {
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 1.55;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 1.45;
                     xOffsetBlock = yellowYoffsetIN;
 
                     if (2 * yellowXoffsetIN + horizontalLiftTargetIN > 10) {
@@ -742,7 +741,16 @@ public class sampleAuto extends OpMode {
                             setPathState(106);
                             timeStamp = opmodeTimer.getElapsedTimeSeconds();
 
-                            scoreSub = follower.pathBuilder().addPath(new BezierCurve(new Point(follower.getPose()), /* Control Point */ new Point(parkScoreControlPose), new Point(scorePose))).setTangentHeadingInterpolation().setReversed(true).build();
+                            scoreSub = follower.pathBuilder().addPath(
+                                            // Line 1
+                                            new BezierCurve(
+                                                    new Point(follower.getPose().getX(), follower.getPose().getY(), Point.CARTESIAN),
+                                                    new Point(47.169, 122.333, Point.CARTESIAN),
+                                                    new Point(22.242, 117.348, Point.CARTESIAN),
+                                                    new Point(13.750, 130.250, Point.CARTESIAN)
+                                            )
+                                    )
+                                    .setTangentHeadingInterpolation().setReversed(true).build();
 
                             follower.followPath(scoreSub, true);
                         }

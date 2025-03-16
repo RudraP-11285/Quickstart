@@ -159,8 +159,12 @@ public class teleOP extends LinearOpMode {
 
     double verticalZeroValue = 0;
     double verticalLiftValue = 0;
+    double horizontalLiftValue = 0;
+double horizontalZeroValue = 0;
 
     Boolean intakeRotateOverride = false;
+
+    MotorPIDController extendoController;
     //endregion
 
     @Override
@@ -178,6 +182,8 @@ public class teleOP extends LinearOpMode {
         verticalRight = hardwareMap.get(DcMotor.class, "verticalRight");
         verticalLeft = hardwareMap.get(DcMotor.class, "verticalLeft");
         horizontalDrive = hardwareMap.get(DcMotor.class, "horizontalDrive");
+
+        extendoController = new MotorPIDController(horizontalDrive, 0.011, 0, 0.000475, 0.1, (double) (700 / 180), 145.5, 4.941);
 
 
         // All 4 input servos
@@ -317,6 +323,11 @@ public class teleOP extends LinearOpMode {
                 verticalZeroValue = (double) verticalRight.getCurrentPosition();
             }
             verticalLiftValue = (double) (verticalRight.getCurrentPosition() - verticalZeroValue);
+
+            if (magHorOn) {
+                horizontalZeroValue = (double) horizontalDrive.getCurrentPosition();
+            }
+            horizontalLiftValue = (double) (horizontalDrive.getCurrentPosition() - horizontalZeroValue);
             //endregion
 
             //region Drivetrain Movement
@@ -374,18 +385,15 @@ public class teleOP extends LinearOpMode {
             // Bring everything back to the transfer position
             if (gamepad2.b) { // && verticalLiftValue > 60
                 if (horizontalDrive.getCurrentPosition() < 150 && !intakeInTransferPosition(wristServoController)) {
-                    outDrivePower = 1;
+                    extendoController.setTargetPosition(150, 1, "Ticks", horizontalLiftValue);
+                    intakeState = true;
                 } else {
                     intakeState = true;
                     intakeRotateState = false;
                     intakeClawState = true;
                     deposArmState = false;
 
-                    outDrivePower = 0;
-
-                    if (horizontalDrive.getCurrentPosition() > 150) {
-                        outDrivePower = -1;
-                    }
+                    //outDrivePower = 0;
 
                     if (verticalLiftValue > 50) {
                         upDrivePower = -1;
@@ -396,7 +404,9 @@ public class teleOP extends LinearOpMode {
                         //intakeWaitToReturn = false;
 
                         if (!magHorOn && intakeInTransferPosition(wristServoController)) {
-                            outDrivePower = -1;
+                            extendoController.setTargetPosition(0, 1, "Ticks", horizontalLiftValue);
+                        } else if (horizontalDrive.getCurrentPosition() > 150) {
+                            extendoController.setTargetPosition(150, 1, "Ticks", horizontalLiftValue);
                         }
                     }
                 }
@@ -632,10 +642,12 @@ public class teleOP extends LinearOpMode {
 
 
             // Send calculated power to wheels
-            if (!magHorOn) {
-                outDrivePower += (gamepad2.right_trigger - gamepad2.left_trigger);
-            } else {
-                outDrivePower += (gamepad2.right_trigger);
+            if (!gamepad2.b) {
+                if (!magHorOn) {
+                    outDrivePower += (gamepad2.right_trigger - gamepad2.left_trigger);
+                } else {
+                    outDrivePower += (gamepad2.right_trigger);
+                }
             }
             //endregion
 
@@ -773,7 +785,9 @@ public class teleOP extends LinearOpMode {
             //if (!gamepad2.b) {
             verticalRight.setPower(upDrivePower);
             verticalLeft.setPower(-upDrivePower);
-            horizontalDrive.setPower(outDrivePower);
+            if (!gamepad2.b) {
+                horizontalDrive.setPower(outDrivePower);
+            }
             //}
             //endregion
 

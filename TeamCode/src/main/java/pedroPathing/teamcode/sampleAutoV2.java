@@ -37,8 +37,8 @@ import pedroPathing.constants.LConstants;
  */
 
 @Config
-@Autonomous(name = "! PINEAPPLE COCONUT", group = "! SUPER Autonomous")
-public class sampleAuto extends OpMode {
+@Autonomous(name = "! PINEAPPLE COCONUT TESTING", group = "! SUPER Autonomous")
+public class sampleAutoV2 extends OpMode {
     //region Declare Hardware
     // Declare OpMode members for each of the 4 drive motors and 3 horizontal/vertical lift motors
     private ElapsedTime runtime = new ElapsedTime();
@@ -170,14 +170,14 @@ public class sampleAuto extends OpMode {
     public static final Pose scorePose = new Pose(13.75, 130.25, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
-    public static Pose pickup1Pose = new Pose(26.35, 122.9, Math.toRadians(0)); //x was 26.15 before
+    public static Pose pickup1Pose = new Pose(25.8, 122.9, Math.toRadians(0)); //x was 26.15 before
 
     /** Middle (Second) Sample from the Spike Mark */
     public static Pose pickup2Pose = new Pose(25.8, 132.9, Math.toRadians(0));
 
     /** Highest (Third) Sample from the Spike Mark */
     //public static Pose pickup3Pose = new Pose(27,  128.5, Math.toRadians(135)); // y was 129.55 before
-    private final Pose pickup3Pose = new Pose(32.42, 144 - 16.031291611185091, Math.toRadians(50)); // x was 32.22 before
+    private final Pose pickup3Pose = new Pose(32.2, 144 - 15.2531291611185091, Math.toRadians(50)); // x was 32.22 before
 
 
     /** Park Pose for our robot, after we do all of the scoring. */
@@ -594,11 +594,11 @@ public class sampleAuto extends OpMode {
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 0.5; //- 1.5;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN + 0.5; //- 1.5;
                     xOffsetBlock = yellowYoffsetIN;
 
-                    if (2 * yellowXoffsetIN + horizontalLiftTargetIN > 10) {
-                        extendoController.setTargetPosition(25 / 2.642611684, 0.35, "Ticks", horizontalLiftValue);
+                    if (horizontalLiftTargetIN > 10) {
+                        extendoController.setTargetPosition(25 / 2.642611684, 0.225, "Ticks", horizontalLiftValue);
                         telemetry.addData("TOO FAR!", horizontalLiftValue);
                     } else {
                         //extendoController.setPIDF(0.014, 0, 0.000475, 0.1);
@@ -629,7 +629,7 @@ public class sampleAuto extends OpMode {
 
                 extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
 
-                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.65) {
+                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.25) {
                     horizontalDrive.setPower(0);
                     telemetry.addData("Matching", "Positions");
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -738,12 +738,12 @@ public class sampleAuto extends OpMode {
                     horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 0.5; //- 1.5;
                     xOffsetBlock = yellowYoffsetIN;
 
-                    if (2 * yellowXoffsetIN + horizontalLiftTargetIN > 10) {
-                        extendoController.setTargetPosition(25 / 2.642611684, 0.35, "Ticks", horizontalLiftValue);
+                    if (horizontalLiftTargetIN > 10) {
+                        extendoController.setTargetPosition(25 / 2.642611684, 0.225, "Ticks", horizontalLiftValue);
                         telemetry.addData("TOO FAR!", horizontalLiftValue);
                     } else {
                         //extendoController.setPIDF(0.013, 0, 0.000475, 0.1);
-                        extendoController.setPIDF(0.018, 0, 0.0002, 0.1);
+                        extendoController.setPIDF(0.018, 0, 0.00015, 0.1);
 
                         setPathState(106);
                         break;
@@ -774,7 +774,7 @@ public class sampleAuto extends OpMode {
 
                 extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
 
-                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.4) {
+                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.25) {
                     horizontalDrive.setPower(0);
                     telemetry.addData("Matching", "Positions");
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -786,6 +786,7 @@ public class sampleAuto extends OpMode {
                     intakeRotateOverride = true;
                     intakeClawState = false;
                     grabbing = true;
+
 
                     intakeRotate.setPosition(calculatedPosition);
 
@@ -1007,12 +1008,12 @@ public class sampleAuto extends OpMode {
             }
         }
         if (autoIntakeMode) {
-            if (runtime.seconds() > grabTimer + 0.7 && grabbing) {
+            if (runtime.seconds() > grabTimer + 0.65 && grabbing) {
                 grabbing = false;
                 intakeRotateOverride = false;
             }
 
-            if (runtime.seconds() > grabTimer + 0.3 && grabbing && runtime.seconds() < grabTimer + 0.6) {
+            if (runtime.seconds() > grabTimer + 0.25 && grabbing && runtime.seconds() < grabTimer + 0.5) {
                 intakeClawState = true;
             }
         } else {

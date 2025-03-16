@@ -46,14 +46,14 @@ public class extendoPID extends OpMode {
 
     public void loop() {
         extendoController.setPID(p, i, d);
-        int position = verticalRight.getCurrentPosition();
+        int position = horizontalDrive.getCurrentPosition();
         double pid = extendoController.calculate(position, target);
         double ff = Math.cos(Math.toRadians(target)) * f;
 
         double power = pid + ff;
 
-        verticalRight.setPower(power);
-        verticalLeft.setPower(-power);
+        horizontalDrive.setPower(power);
+        //verticalLeft.setPower(-power);
 
         //deposClaw.setPosition(1);
         //deposArm.setPosition(0.25);

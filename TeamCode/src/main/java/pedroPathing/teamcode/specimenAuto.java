@@ -389,11 +389,11 @@ public class specimenAuto extends OpMode {
                     double blueYoffsetIN = blueYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Blue X Offset Inches", blueXoffsetIN);
                     telemetry.addData("Blue Y Offset Inches", blueYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - blueYoffsetIN - 1.5;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue) - blueYoffsetIN - 1.5;
                     xOffsetBlock = blueXoffsetIN;
 
                     if (2 * blueXoffsetIN + horizontalLiftTargetIN > 11.2) {
@@ -420,7 +420,7 @@ public class specimenAuto extends OpMode {
                 liftControllerRight.setTargetPosition(25, 1, "Ticks", verticalLiftValue);
                 verticalLeft.setPower(verticalRight.getPower());
 
-                double posIN = extendoController.getCurrentPosition("Inches");
+                double posIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue);
 
                 telemetry.addData("Position Inches", posIN);
                 telemetry.addData("Target Position", horizontalLiftTargetIN);
@@ -460,7 +460,7 @@ public class specimenAuto extends OpMode {
                     double blueYoffsetIN = blueYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Blue X Offset Inches", blueXoffsetIN);
                     telemetry.addData("Blue Y Offset Inches", blueYoffsetIN);
 

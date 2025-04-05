@@ -54,14 +54,14 @@ public class MotorPIDController {
         }
     }
 
-    public double getCurrentPosition(String units) {
+    public double getCurrentPosition(String units, double encoderValue) {
         switch (units) {
             case "Inches":
-                return motor.getCurrentPosition() / ticksPerInch;
+                return encoderValue / ticksPerInch;
             case "Ticks":
-                return motor.getCurrentPosition();
+                return encoderValue;
             default:
-                return motor.getCurrentPosition() / ticksPerInch;
+                return encoderValue / ticksPerInch;
         }
     }
 }

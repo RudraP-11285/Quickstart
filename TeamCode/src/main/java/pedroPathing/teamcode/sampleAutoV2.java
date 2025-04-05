@@ -133,6 +133,9 @@ public class sampleAutoV2 extends OpMode {
     //endregion
 
     private double timeStamp = 0.0;
+    private double velocityTimestampNew = 0.0;
+    private double velocityTimestampOld = 0.0;
+    private double extendoPositionOld = 0.0;
 
     int chosenPose1 = 2;
     int chosenPose2 = 2;
@@ -521,6 +524,9 @@ public class sampleAutoV2 extends OpMode {
                 }
                 break;
             case 101:
+                telemetry.addData("Hor Lift Val", horizontalLiftValue);
+                telemetry.addData("Vert Lift Val", verticalLiftValue);
+
                 if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) { // 0.3 before CHANGED
                     break;
                 }
@@ -548,7 +554,7 @@ public class sampleAutoV2 extends OpMode {
                     horizontalDrive.setPower(0);
                 }
 
-                if (!follower.isBusy() && !(horizontalLiftValue < 380) && !(verticalLiftValue >= 15)) {
+                if (!follower.isBusy() && !(horizontalLiftValue < 310) && !(verticalLiftValue >= 25)) {
                     setPathState(102);
                 }
                 break;
@@ -590,24 +596,24 @@ public class sampleAutoV2 extends OpMode {
                     double yellowYoffsetIN = yellowYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN + 0.5; //- 1.5;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue) - yellowYoffsetIN; //- 1.5;
                     xOffsetBlock = yellowYoffsetIN;
 
                     if (horizontalLiftTargetIN > 10) {
-                        extendoController.setTargetPosition(25 / 2.642611684, 0.225, "Ticks", horizontalLiftValue);
+                        extendoController.setTargetPosition(25 / 2.642611684, 0.26, "Ticks", horizontalLiftValue);
                         telemetry.addData("TOO FAR!", horizontalLiftValue);
                     } else {
                         //extendoController.setPIDF(0.014, 0, 0.000475, 0.1);
-                        extendoController.setPIDF(0.018, 0, 0.00015, 0.1);
+                        extendoController.setPIDF(0.04, 0, 0.0003, 0.0);
                         setPathState(103);
                         break;
                     }
                 } else {
-                    extendoController.setTargetPosition(25 / 2.642611684, 0.225, "Ticks", horizontalLiftValue);
+                    extendoController.setTargetPosition(25 / 2.642611684, 0.26, "Ticks", horizontalLiftValue);
 
                     telemetry.addData("WE SEE NOTHING", horizontalLiftValue);
                 }
@@ -622,14 +628,26 @@ public class sampleAutoV2 extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
-                double posIN = extendoController.getCurrentPosition("Inches");
+                velocityTimestampOld = velocityTimestampNew;
+                velocityTimestampNew = opmodeTimer.getElapsedTimeSeconds();
+                double posIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue);
+
+                double deltaT = velocityTimestampNew - velocityTimestampOld;
+                double deltaX = posIN - extendoPositionOld;
+
+                if (deltaT == 0) {
+                    deltaT = 0.0000001;
+                }
+                double velocity = deltaX/deltaT;
+
 
                 telemetry.addData("Position Inches", posIN);
                 telemetry.addData("Target Position", horizontalLiftTargetIN);
+                telemetry.addData("Velocity", velocity);
 
                 extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
 
-                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.25) {
+                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.25 && velocity < 0.05) {
                     horizontalDrive.setPower(0);
                     telemetry.addData("Matching", "Positions");
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -637,6 +655,8 @@ public class sampleAutoV2 extends OpMode {
                     setPathState(104);
                     break;
                 }
+
+                extendoPositionOld = posIN;
 
                 break;
             case 104:
@@ -666,12 +686,12 @@ public class sampleAutoV2 extends OpMode {
                     double yellowYoffsetIN = yellowYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
                     if (pythonOutputs[8] < 0) {
-                        double lateral = -0.245;
+                        double lateral = -0.29;
 
                         double leftFrontPower = +lateral * 1.15;
                         double rightFrontPower = -lateral * 1.15;
@@ -683,7 +703,7 @@ public class sampleAutoV2 extends OpMode {
                         leftBackDrive.setPower(leftBackPower);
                         rightBackDrive.setPower(rightBackPower);
                     } else {
-                        double lateral = 0.245;
+                        double lateral = 0.29;
 
                         double leftFrontPower = +lateral * 1.15;
                         double rightFrontPower = -lateral * 1.15;
@@ -731,25 +751,25 @@ public class sampleAutoV2 extends OpMode {
                     double yellowYoffsetIN = yellowYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 0.5; //- 1.5;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue) - yellowYoffsetIN; //- 1.5;
                     xOffsetBlock = yellowYoffsetIN;
 
                     if (horizontalLiftTargetIN > 10) {
-                        extendoController.setTargetPosition(25 / 2.642611684, 0.225, "Ticks", horizontalLiftValue);
+                        extendoController.setTargetPosition(25 / 2.642611684, 0.26, "Ticks", horizontalLiftValue);
                         telemetry.addData("TOO FAR!", horizontalLiftValue);
                     } else {
                         //extendoController.setPIDF(0.013, 0, 0.000475, 0.1);
-                        extendoController.setPIDF(0.018, 0, 0.00015, 0.1);
+                        extendoController.setPIDF(0.04, 0, 0.0003, 0.0);
 
                         setPathState(106);
                         break;
                     }
                 } else {
-                    extendoController.setTargetPosition(25 / 2.642611684, 0.225, "Ticks", horizontalLiftValue);
+                    extendoController.setTargetPosition(25 / 2.642611684, 0.26, "Ticks", horizontalLiftValue);
 
                     telemetry.addData("WE SEE NOTHING", horizontalLiftValue);
                 }
@@ -767,14 +787,26 @@ public class sampleAutoV2 extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
-                posIN = extendoController.getCurrentPosition("Inches");
+                velocityTimestampOld = velocityTimestampNew;
+                velocityTimestampNew = opmodeTimer.getElapsedTimeSeconds();
+                posIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue);
+
+                deltaT = velocityTimestampNew - velocityTimestampOld;
+                deltaX = posIN - extendoPositionOld;
+
+                if (deltaT == 0) {
+                    deltaT = 0.0000001;
+                }
+                velocity = deltaX/deltaT;
+
 
                 telemetry.addData("Position Inches", posIN);
                 telemetry.addData("Target Position", horizontalLiftTargetIN);
+                telemetry.addData("Velocity", velocity);
 
                 extendoController.setTargetPosition(horizontalLiftTargetIN, 1, "Inches", horizontalLiftValue);
 
-                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.25) {
+                if (Math.abs(posIN - horizontalLiftTargetIN) - 0 < 0.25 && velocity < 0.05) {
                     horizontalDrive.setPower(0);
                     telemetry.addData("Matching", "Positions");
                     timeStamp = opmodeTimer.getElapsedTimeSeconds();
@@ -794,9 +826,11 @@ public class sampleAutoV2 extends OpMode {
                     break;
                 }
 
+                extendoPositionOld = posIN;
+
                 break;
             case 107: // Go to transfer position
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.85)) {
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.75)) {
                     break;
                 }
 

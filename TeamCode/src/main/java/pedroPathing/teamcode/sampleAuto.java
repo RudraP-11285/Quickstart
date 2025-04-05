@@ -590,11 +590,11 @@ public class sampleAuto extends OpMode {
                     double yellowYoffsetIN = yellowYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 0.5; //- 1.5;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue) - yellowYoffsetIN - 0.5; //- 1.5;
                     xOffsetBlock = yellowYoffsetIN;
 
                     if (2 * yellowXoffsetIN + horizontalLiftTargetIN > 10) {
@@ -622,7 +622,7 @@ public class sampleAuto extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
-                double posIN = extendoController.getCurrentPosition("Inches");
+                double posIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue);
 
                 telemetry.addData("Position Inches", posIN);
                 telemetry.addData("Target Position", horizontalLiftTargetIN);
@@ -666,7 +666,7 @@ public class sampleAuto extends OpMode {
                     double yellowYoffsetIN = yellowYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
@@ -731,11 +731,11 @@ public class sampleAuto extends OpMode {
                     double yellowYoffsetIN = yellowYoffset/120;
 
                     telemetry.addData("Horizontal Value", horizontalLiftValue);
-                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches"));
+                    telemetry.addData("Extendo Inches", extendoController.getCurrentPosition("Inches", horizontalLiftValue));
                     telemetry.addData("Yellow X Offset Inches", yellowXoffsetIN);
                     telemetry.addData("Yellow Y Offset Inches", yellowYoffsetIN);
 
-                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches") - yellowYoffsetIN - 0.5; //- 1.5;
+                    horizontalLiftTargetIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue) - yellowYoffsetIN - 0.5; //- 1.5;
                     xOffsetBlock = yellowYoffsetIN;
 
                     if (2 * yellowXoffsetIN + horizontalLiftTargetIN > 10) {
@@ -767,7 +767,7 @@ public class sampleAuto extends OpMode {
                     verticalLeft.setPower(0);
                 }
 
-                posIN = extendoController.getCurrentPosition("Inches");
+                posIN = extendoController.getCurrentPosition("Inches", horizontalLiftValue);
 
                 telemetry.addData("Position Inches", posIN);
                 telemetry.addData("Target Position", horizontalLiftTargetIN);

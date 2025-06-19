@@ -351,7 +351,7 @@ public class sampleAutoV2 extends OpMode {
                     verticalRight.setPower(0);
                 }
 
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.12)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
                     setPathState(3);
                     intakeState = false;
@@ -359,7 +359,7 @@ public class sampleAutoV2 extends OpMode {
                 }
                 break;
             case 3: // Wait for drop, start moving to grab
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.3)) { // 0.3 before CHANGED
                     break;
                 }
                 deposClawState = true;
@@ -390,7 +390,7 @@ public class sampleAutoV2 extends OpMode {
                 break;
             case 4: // Go to the next grab path
                 //follower.followPath(grabPaths[numberScored - 1], true);
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.4)) { // 0.3 before CHANGED
                     break;
                 }
 
@@ -415,8 +415,10 @@ public class sampleAutoV2 extends OpMode {
                     extendoController.setTargetPosition(235, 1, "Ticks", horizontalLiftValue);
                 }
 
+                telemetry.addData("busy?", follower.isBusy());
+                telemetry.addData("intake arm posiiton?",intakeArmServoController.getCurrentPositionInDegrees() - 20);
 
-                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 34) < 4) {
+                if (!follower.isBusy() && Math.abs(intakeArmServoController.getCurrentPositionInDegrees() - 20) < 4) {
                     if (numberScored == 3 && Math.abs(horizontalLiftValue - 250) < 10) {
                         grabbing = true;
                         grabTimer = runtime.seconds();

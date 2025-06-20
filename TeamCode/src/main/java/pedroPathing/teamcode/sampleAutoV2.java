@@ -176,7 +176,7 @@ public class sampleAutoV2 extends OpMode {
     public static Pose pickup1Pose = new Pose(25.8, 122.9, Math.toRadians(0)); //x was 26.15 before
 
     /** Middle (Second) Sample from the Spike Mark */
-    public static Pose pickup2Pose = new Pose(25.8, 132.9, Math.toRadians(0));
+    public static Pose pickup2Pose = new Pose(25.8, 132.5, Math.toRadians(-2));
 
     /** Highest (Third) Sample from the Spike Mark */
     //public static Pose pickup3Pose = new Pose(27,  128.5, Math.toRadians(135)); // y was 129.55 before
@@ -351,7 +351,7 @@ public class sampleAutoV2 extends OpMode {
                     verticalRight.setPower(0);
                 }
 
-                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.25)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
+                if (opmodeTimer.getElapsedTimeSeconds() > (timeStamp + 0.3)) { //(Math.abs(deposLeftController.getCurrentPositionInDegrees() - 85) < 2) {
                     deposClawState = false;
                     setPathState(3);
                     intakeState = false;
@@ -384,6 +384,7 @@ public class sampleAutoV2 extends OpMode {
                         deposClawState = true;
                         intakeClawState = false;
                         intakeRotateState = false;
+                        timeStamp = opmodeTimer.getElapsedTimeSeconds();
                         setPathState(101);
                         break;
                 }
@@ -529,7 +530,7 @@ public class sampleAutoV2 extends OpMode {
                 telemetry.addData("Hor Lift Val", horizontalLiftValue);
                 telemetry.addData("Vert Lift Val", verticalLiftValue);
 
-                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.2)) { // 0.3 before CHANGED
+                if (opmodeTimer.getElapsedTimeSeconds() < (timeStamp + 0.6)) { // 0.3 before CHANGED
                     break;
                 }
 
